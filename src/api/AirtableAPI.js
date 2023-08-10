@@ -20,13 +20,11 @@ try {
 };
 
 const getFile = (pdfArray, name) => {
-console.log(name)
 for (const file of pdfArray) {
-  console.log("inside" + file.originalname)
   if (file.originalname === name) {
+    console.log("woo")
     const uploadsPath = path.join(__dirname, './../../uploads'); // Adjust the path as needed
     const filePath = path.join(uploadsPath, name);
-    
     fs.writeFileSync(filePath, file.buffer);
     return filePath;
   }
@@ -95,15 +93,54 @@ const formatGameData = (data,GameId) => {
   }
 };
 
-const formatRoleData = (data,GameId) => {
-const records = data.map((role) => ({
-  fields: {
+const formatRoleData = (data,GameId,LevelDescription) => {
+const records = data.map((datum) => (
+ {
+  fields  :{
     GameID: GameId, // Update with the actual GameID
-    Role: role,
-    
-  },
+    Role: JSON.parse(datum).role,
+    Submit: JSON.parse(datum).checked,
+    Description : LevelDescription
+  }
 }));
+return records;
 };
+
+const formatLevelData = (data, GameId, pdfArray, NumberOfRounds, IndividualInstructionsPerRound) => {
+  const records = data.map((datum) => {
+    const parsedDatum = JSON.parse(datum);
+    const role = parsedDatum.role;
+
+    if (IndividualInstructionsPerRound) {
+      const levelRecords = [];
+      for (let i = 1; i <= NumberOfRounds; i++) {
+        levelRecords.push({
+          fields: {
+            GameID: GameId,
+            Role: role,
+            Level: i,
+            LevelDescription: getFile(pdfArray, `${role}_Level${i}.pdf`)
+          }
+        });
+      }
+      return levelRecords;
+    } else {
+      return {
+        fields: {
+          GameID: GameId,
+          Role: role,
+          Level: 0,
+          LevelDescription: "No"
+        }
+      };
+    }
+  });
+
+  // Flatten the nested arrays into a single array of records
+  return records.flat();
+};
+
+  
 
 
 const getParseData = (data) => {
@@ -116,33 +153,21 @@ return parsedData;
 
 const createGame = async (pdf, data,roles) => {
 try {
+  console.log(pdf)
+  let LevelDescription = ""
   const UniqueCode = generateUniqueCode(7);
   const GameData = formatGameData(JSON.parse(data),UniqueCode);
-  const RoleData = formatRoleData(roles,UniqueCode)
-  const output = await createRecord(GameData,"Games");
-if (output && output.id){
-  
-
-}
-  // console.log(formattedData)
-  // console.log(formattedData.GameName)
-  // console.log(roles)
-  // const rolesArray = roles.split(',');
-  // console.log(rolesArray)
-  // const parsedData = getParseData(data);
-  // console.log(parsedData)
-
-  // const finalData = formatData(pdf, data);
-  // if (finalData.length === 0) {
-  //   console.log('No valid data to create.');
-  //   return;
-  // }
-  // const output = await createRecord(finalData,"Game");
-  // const output = await createRecord(finalData);
-  // console.log('Data successfully sent to Airtable', output);
+  if(!GameData.IndividualInstructionsPerRound){
+    LevelDescription = getFile(pdf,"individualPdf.pdf")
+  }
+  const RoleData = formatRoleData(roles,UniqueCode,LevelDescription)
+  const LevelData = formatLevelData(roles,UniqueCode,pdf,GameData.NumberOfRounds,GameData.IndividualInstructionsPerRound)
+  await createRecord(GameData,"Games");
+  await createRecord(RoleData,"Role");
+  await createRecord(LevelData,"Level")
+  console.log('Data successfully sent to Airtable', output);
 } catch (error) {
   console.error('Error creating game:', error);
-  // Handle the error, such as sending an error response to the client
 }
 };
 
