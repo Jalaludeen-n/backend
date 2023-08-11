@@ -4,7 +4,7 @@ require('dotenv').config({ path: __dirname + '/.env' });
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const {createGame} = require('./api/AirtableAPI'); 
+const {createGame,fetchGameData} = require('./api/AirtableAPI'); 
 const multer = require('multer');
 // const upload = multer(); //
 const storage = multer.memoryStorage(); // Store files in memory as buffers
@@ -26,6 +26,25 @@ try {
 }
 });
 
+app.post('/start-game', async (req, res) => {
+  try {
+    
+    res.status(200).json({ message: 'Game Started successfully' });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+  });
+app.get('/games', async (req, res) => {
+  try {
+    const data = await fetchGameData()
+    res.status(200).json({data:data, message: 'Data and PDFs submitted successfully' });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+  });
+  
 
 // Start the server
 const port = 3001; // Replace with your desired port number

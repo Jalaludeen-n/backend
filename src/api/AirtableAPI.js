@@ -18,11 +18,28 @@ try {
   throw error; // Throw the error to be caught by the caller
 }
 };
+const fetchGameData = async () => {
+  try {
+    const records = await base("Games")
+      .select({
+        fields: ['GameID', 'GameName'],
+      })
+      .all();
+    const gameData = records.map(record => ({
+      id: record.get('GameID'),
+      name: record.get('GameName'),
+    }));
+    return gameData;
+  } catch (error) {
+    console.error('Error:', error);
+    return null;
+  }
+};
+
 
 const getFile = (pdfArray, name) => {
 for (const file of pdfArray) {
   if (file.originalname === name) {
-    console.log("woo")
     const uploadsPath = path.join(__dirname, './../../uploads'); // Adjust the path as needed
     const filePath = path.join(uploadsPath, name);
     fs.writeFileSync(filePath, file.buffer);
@@ -153,7 +170,6 @@ return parsedData;
 
 const createGame = async (pdf, data,roles) => {
 try {
-  console.log(pdf)
   let LevelDescription = ""
   const UniqueCode = generateUniqueCode(7);
   const GameData = formatGameData(JSON.parse(data),UniqueCode);
@@ -190,6 +206,6 @@ return code.substring(0, length); // Return only the desired length
 
 // Export the functions
 module.exports = {
-createRecord,
 createGame,
+fetchGameData,
 };
