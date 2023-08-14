@@ -1,4 +1,5 @@
 const Airtable = require("airtable");
+const { group } = require("console");
 const { json } = require("express");
 const apiKey = process.env.AIRTABLE_API_KEY;
 const baseId = process.env.BASE_ID;
@@ -46,7 +47,7 @@ const getFile = (pdfArray, name) => {
   return null;
 };
 
-const formatedDataformatGameData = (data, GameId) => {
+const formatGameData = (data, GameId) => {
   return {
     GameID: GameId,
     GameName: data.GameName,
@@ -113,6 +114,7 @@ const formatLevelData = (
 
 const startGame = async (data) => {
   try {
+    console.log(data);
     const formatedData = {
       GameID: data.gameId,
       RoomNumber: data.roomNumber,
@@ -121,6 +123,20 @@ const startGame = async (data) => {
       TotalGrops: parseInt(data.numbersOfGroups),
     };
     await createRecord(formatedData, "GameInitiated");
+    console.log("Data successfully sent to Airtable");
+  } catch (error) {
+    console.error("Error creating game:", error);
+  }
+};
+
+const joinGame = async (data) => {
+  try {
+    const formatedData = {
+      RoomNumber: data.roomNumber,
+      EmailID: data.Email,
+      Group: parseInt(data.group),
+    };
+    await createRecord(formatedData, "RunningGames");
     console.log("Data successfully sent to Airtable");
   } catch (error) {
     console.error("Error creating game:", error);
@@ -174,4 +190,5 @@ module.exports = {
   createGame,
   fetchGameData,
   startGame,
+  joinGame,
 };
