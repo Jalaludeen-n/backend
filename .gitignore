@@ -19,8 +19,7 @@
 .env.production.local
 tomorrow-college.json
 .env
-/uploads
-
+src/uploads
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

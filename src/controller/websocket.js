@@ -1,21 +1,25 @@
-const WebSocket = require("ws");
+const socketIO = require("socket.io");
 
-module.exports = (server) => {
-  const wss = new WebSocket.Server({ server });
+function createWebSocketServer(server) {
+  const io = socketIO(server, {
+    cors: {
+      origin: "http://localhost:3000",
+      methods: ["GET", "POST"],
+    },
+  });
 
-  wss.on("connection", (socket) => {
-    console.log("WebSocket connected");
+  io.on("connection", (socket) => {
+    console.log("A user connected");
 
-    socket.on("message", (message) => {
-      console.log("Received:", message);
+    // Emit a welcome message to the connected client
+    // socket.emit("message", "Welcome to the WebSocket server!");
 
-      socket.send("Message received by server");
-    });
-
-    socket.on("close", () => {
-      console.log("WebSocket disconnected");
+    socket.on("disconnect", () => {
+      console.log("A user disconnected");
     });
   });
 
-  return wss;
-};
+  return io;
+}
+
+module.exports = { createWebSocketServer };
