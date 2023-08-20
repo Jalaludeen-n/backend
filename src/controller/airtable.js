@@ -12,18 +12,36 @@ const createRecord = async (data, Table) => {
     throw error; // Throw the error to be caught by the caller
   }
 };
-
-const fetchGameData = async () => {
+const updateRecord = async (tableName, RoomNumber, updatedFields) => {
   try {
-    const records = await base("Games")
+    const updatedRecord = await base(tableName).update(
+      "UTABK1NB",
+      updatedFields,
+    );
+
+    return updatedRecord;
+  } catch (error) {
+    console.error(error);
+    throw error; // Throw the error to be caught by the caller
+  }
+};
+
+const fetchGameData = async (tableName, fieldNames) => {
+  try {
+    const records = await base(tableName)
       .select({
-        fields: ["GameID", "GameName"],
+        fields: fieldNames,
       })
       .all();
-    const gameData = records.map((record) => ({
-      id: record.get("GameID"),
-      name: record.get("GameName"),
-    }));
+
+    const gameData = records.map((record) => {
+      const data = {};
+      fieldNames.forEach((field) => {
+        data[field] = record.get(field);
+      });
+      return data;
+    });
+
     return gameData;
   } catch (error) {
     console.error("Error:", error);
@@ -31,7 +49,50 @@ const fetchGameData = async () => {
   }
 };
 
+const getIdForUpdate = async (tableName, condition, fields) => {
+  try {
+    const queryResult = await base(tableName)
+      .select({
+        fields: fields,
+        filterByFormula: condition,
+      })
+      .firstPage();
+    console.log("__");
+    console.log(queryResult);
+
+    if (queryResult && queryResult.length > 0) {
+      const recordToUpdate = queryResult[0];
+      const recordId = recordToUpdate.id;
+
+      return recordToUpdate;
+    } else {
+      console.log("No record found");
+      return null;
+    }
+  } catch (error) {
+    console.error("Error updating record:", error);
+    throw error;
+  }
+};
+
+const updateGameInitiatedRecord = async (tableName, id, updatedFields) => {
+  try {
+    const updatedRecord = await base(tableName).update(id, updatedFields);
+
+    if (updatedRecord) {
+      console.log("Record updated:");
+    } else {
+      console.log("No record found");
+    }
+  } catch (error) {
+    console.error("Error updating record:", error);
+  }
+};
+
 module.exports = {
   createRecord,
   fetchGameData,
+  updateRecord,
+  updateGameInitiatedRecord,
+  getIdForUpdate,
 };

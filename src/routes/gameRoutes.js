@@ -3,9 +3,16 @@ const router = express.Router();
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const { createGame, startGame, joinGame } = require("../components/airtable");
+const {
+  createGame,
+  startGame,
+  joinGame,
+  updateInitiateGames,
+  getRunningAndPastGame,
+} = require("../components/airtable");
 
 const { fetchGameData } = require("../controller/airtable");
+const { fetchGameDetails } = require("../components/gameDetails");
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -22,6 +29,7 @@ router.post("/new", upload.array("pdf"), async (req, res) => {
 
 router.post("/start", async (req, res) => {
   try {
+    console.log(req.body.data);
     startGame(JSON.parse(req.body.data));
     res.status(200).json({ message: "Game Started successfully" });
   } catch (error) {
@@ -32,8 +40,22 @@ router.post("/start", async (req, res) => {
 
 router.post("/join", async (req, res) => {
   try {
-    joinGame(JSON.parse(req.body.data));
-    res.status(200).json({ message: "Game Started successfully" });
+    const data = JSON.parse(req.body.data);
+    await joinGame(data);
+    updateInitiateGames(data.roomNumber);
+    await res.status(200).json({ message: "Game Started successfully" });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
+
+router.get("/running", async (req, res) => {
+  try {
+    const data = await getRunningAndPastGame();
+    await res
+      .status(200)
+      .json({ data: data.fields, message: "fetched successfully" });
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "An error occurred" });
@@ -41,11 +63,13 @@ router.post("/join", async (req, res) => {
 });
 
 router.get("/get-details", (req, res) => {
+  console.log(req.body);
   const gameDetails = {
     gameId: "LL52WLU",
     roomNumber: "8X2GWLPP",
     // ... other game details
   };
+  const data = fetchGameDetails(req.body.data);
   const pdfFilePath = path.join(__dirname, "./../uploads", "individualPdf.pdf"); // Adjust the path as needed
 
   // Read the PDF file and send along with game details
@@ -61,10 +85,9 @@ router.get("/get-details", (req, res) => {
 
 router.get("/list", async (req, res) => {
   try {
-    const data = await fetchGameData();
-    res
-      .status(200)
-      .json({ data: data, message: "Data and PDFs submitted successfully" });
+    const fields = ["GameID", "GameName", "Date"];
+    const data = await fetchGameData("Games", fields);
+    res.status(200).json({ data: data, message: "Game list" });
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "An error occurred" });

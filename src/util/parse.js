@@ -26,7 +26,7 @@ const formatGameData = (data, GameId, instruction) => {
     ScoreVisibilityForPlayers: data.ScoreVisibility,
     RolesAutoSelection: data.RoleSelection,
     IndividualInstructionsPerRound: data.IndividualInstructions,
-    Instruction: GameId + "_" + instruction,
+    Instruction: instruction,
     Date: getDate(),
   };
 };
@@ -35,9 +35,9 @@ const parseGameData = (data) => {
   return {
     GameID: data.gameId,
     RoomNumber: data.roomNumber,
-    TotalPlayers: parseInt(data.numberOfPlayers),
-    GroupSize: parseInt(data.playersPerGroup),
-    TotalGroups: parseInt(data.numbersOfGroups),
+    Date: getDate(),
+    Status: "Started",
+    Players: 0,
   };
 };
 
@@ -45,13 +45,16 @@ const parseJoinGameData = (data) => {
   return {
     RoomNumber: data.roomNumber,
     EmailID: data.Email,
-    Group: parseInt(data.group),
+    Group: data.group.toUpperCase(),
   };
 };
 
 const parseAndFormatGameData = (data, uniqueCode, pdf) => {
   const parsedData = JSON.parse(data);
-  const instruction = getFile(pdf, `${parsedData.GameName}GameInstruction.pdf`);
+  const instruction = getFile(
+    pdf,
+    `${parsedData.GameName}_GameInstruction.pdf`,
+  );
   return formatGameData(parsedData, uniqueCode, instruction);
 };
 
@@ -59,7 +62,10 @@ const parseAndFormatLevelData = (roles, pdfArray, gameData) => {
   const formattedLevelData = [];
   JSON.parse(roles).forEach((data) => {
     for (let index = 0; index < gameData.NumberOfRounds; index++) {
-      const PDFPath = getFile(pdfArray, `${data.role}_Level${index + 1}.pdf`);
+      const PDFPath = getFile(
+        pdfArray,
+        `${gameData.GameName}_${data.role}_Level${index + 1}.pdf`,
+      );
       if (PDFPath) {
         const formattedData = formatLevelData(
           data,

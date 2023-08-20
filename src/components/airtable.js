@@ -1,4 +1,8 @@
-const { createRecord } = require("../controller/airtable");
+const {
+  createRecord,
+  getIdForUpdate,
+  updateGameInitiatedRecord,
+} = require("../controller/airtable");
 const {
   parseAndFormatGameData,
   parseAndFormatLevelData,
@@ -12,7 +16,6 @@ const { generateUniqueCode } = require("../util/helper");
 const startGame = async (data) => {
   try {
     const formattedData = parseGameData(data);
-
     await createRecord(formattedData, "GameInitiated");
     console.log("Data successfully sent to Airtable");
   } catch (error) {
@@ -27,6 +30,36 @@ const joinGame = async (data) => {
     console.log("Data successfully sent to Airtable");
   } catch (error) {
     console.error("Error joining game:", error);
+  }
+};
+const updateInitiateGames = async (roomNumber) => {
+  try {
+    const filed = ["Players", "Status"];
+    const condition = `{RoomNumber} = "${roomNumber}"`;
+    const response = await getIdForUpdate("GameInitiated", condition, filed);
+    const updatedFields = {
+      Status: "Running",
+      Players: response.fields.Players + 1,
+    };
+    await updateGameInitiatedRecord(
+      "GameInitiated",
+      response.id,
+      updatedFields,
+    );
+  } catch (error) {
+    console.error("Error joining game:", error);
+  }
+};
+const getRunningAndPastGame = async () => {
+  try {
+    const filed = ["Players", "Status", "Date", "RoomNumber", "GameID"];
+    const condition = `OR({Status} = "Running", {Status} = "Successfull")`;
+    const response = await getIdForUpdate("GameInitiated", condition, filed);
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error getting  games:", error);
+    throw error;
   }
 };
 
@@ -48,4 +81,6 @@ module.exports = {
   startGame,
   joinGame,
   createGame,
+  updateInitiateGames,
+  getRunningAndPastGame,
 };
