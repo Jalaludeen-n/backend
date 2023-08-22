@@ -12,19 +12,6 @@ const createRecord = async (data, Table) => {
     throw error; // Throw the error to be caught by the caller
   }
 };
-const updateRecord = async (tableName, RoomNumber, updatedFields) => {
-  try {
-    const updatedRecord = await base(tableName).update(
-      "UTABK1NB",
-      updatedFields,
-    );
-
-    return updatedRecord;
-  } catch (error) {
-    console.error(error);
-    throw error; // Throw the error to be caught by the caller
-  }
-};
 
 const fetchGameData = async (tableName, fieldNames) => {
   try {
@@ -49,7 +36,7 @@ const fetchGameData = async (tableName, fieldNames) => {
   }
 };
 
-const getIdForUpdate = async (tableName, condition, fields) => {
+const fetchWithContion = async (tableName, condition, fields) => {
   try {
     const queryResult = await base(tableName)
       .select({
@@ -57,14 +44,9 @@ const getIdForUpdate = async (tableName, condition, fields) => {
         filterByFormula: condition,
       })
       .firstPage();
-    console.log("__");
-    console.log(queryResult);
 
     if (queryResult && queryResult.length > 0) {
-      const recordToUpdate = queryResult[0];
-      const recordId = recordToUpdate.id;
-
-      return recordToUpdate;
+      return queryResult;
     } else {
       console.log("No record found");
       return null;
@@ -92,7 +74,6 @@ const updateGameInitiatedRecord = async (tableName, id, updatedFields) => {
 module.exports = {
   createRecord,
   fetchGameData,
-  updateRecord,
   updateGameInitiatedRecord,
-  getIdForUpdate,
+  fetchWithContion,
 };

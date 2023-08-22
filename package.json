@@ -20,6 +20,7 @@
     "google-spreadsheet": "^4.0.2",
     "googleapis": "^123.0.0",
     "multer": "^1.4.5-lts.1",
+    "nodemon": "^3.0.1",
     "socket.io": "^4.7.2",
     "ws": "^8.13.0"
   }

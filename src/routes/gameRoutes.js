@@ -7,12 +7,13 @@ const {
   createGame,
   startGame,
   joinGame,
-  updateInitiateGames,
   getRunningAndPastGame,
+  storeParticipant,
+  fetchParticipantDetails,
 } = require("../components/airtable");
 
 const { fetchGameData } = require("../controller/airtable");
-const { fetchGameDetails } = require("../components/gameDetails");
+const { getRole } = require("../components/gameDetails");
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -40,10 +41,8 @@ router.post("/start", async (req, res) => {
 
 router.post("/join", async (req, res) => {
   try {
-    const data = JSON.parse(req.body.data);
-    await joinGame(data);
-    updateInitiateGames(data.roomNumber);
-    await res.status(200).json({ message: "Game Started successfully" });
+    const result = await joinGame(req.body);
+    res.status(200).json(result);
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "An error occurred" });
@@ -62,25 +61,26 @@ router.get("/running", async (req, res) => {
   }
 });
 
-router.get("/get-details", (req, res) => {
-  console.log(req.body);
-  const gameDetails = {
-    gameId: "LL52WLU",
-    roomNumber: "8X2GWLPP",
-    // ... other game details
-  };
-  const data = fetchGameDetails(req.body.data);
-  const pdfFilePath = path.join(__dirname, "./../uploads", "individualPdf.pdf"); // Adjust the path as needed
+router.post("/details", async (req, res) => {
+  try {
+    const data = await fetchParticipantDetails(req.body);
+    // const role = await getRole(req.body);
+    // await storeParticipant(req.body, data);
 
-  // Read the PDF file and send along with game details
-  fs.readFile(pdfFilePath, (err, pdfData) => {
-    if (err) {
-      console.error("Error reading PDF file:", err);
-      return res.status(500).send("Error reading PDF file");
-    }
-    const base64Pdf = Buffer.from(pdfData).toString("base64");
-    res.json({ gameDetails, base64Pdf });
-  });
+    // const pdfFilePath = path.join(__dirname, "./../uploads", "individualPdf.pdf"); // Adjust the path as needed
+
+    // Read the PDF file and send along with game details
+    // fs.readFile(pdfFilePath, (err, pdfData) => {
+    //   if (err) {
+    //     console.error("Error reading PDF file:", err);
+    //     return res.status(500).send("Error reading PDF file");
+    //   }
+    //   const base64Pdf = Buffer.from(pdfData).toString("base64");
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
+  }
 });
 
 router.get("/list", async (req, res) => {

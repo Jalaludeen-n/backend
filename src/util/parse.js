@@ -44,7 +44,7 @@ const parseGameData = (data) => {
 const parseJoinGameData = (data) => {
   return {
     RoomNumber: data.roomNumber,
-    EmailID: data.Email,
+    EmailID: data.email,
     Group: data.group.toUpperCase(),
   };
 };
