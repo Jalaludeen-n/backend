@@ -1,6 +1,9 @@
 const fs = require("fs");
 const path = require("path");
-const getFile = (pdfArray, name) => {
+const util = require("util");
+const readFileAsync = util.promisify(fs.readFile);
+
+const storeFile = (pdfArray, name) => {
   for (const file of pdfArray) {
     if (file.originalname === name) {
       const uploadsPath = path.join(__dirname, "../uploads");
@@ -11,6 +14,42 @@ const getFile = (pdfArray, name) => {
   }
   return null;
 };
+
+const getFile = async (name) => {
+  const pdfFilePath = path.join(__dirname, "../uploads", name);
+
+  try {
+    const pdfData = await readFileAsync(pdfFilePath);
+    const base64Pdf = Buffer.from(pdfData).toString("base64");
+    return base64Pdf;
+  } catch (err) {
+    console.error("Error reading PDF file:", err);
+    throw new Error("Error reading PDF file");
+  }
+};
+
+const extractSpreadsheetId = (url) => {
+  const regex = /\/d\/([a-zA-Z0-9_-]+)/;
+  const match = url.match(regex);
+
+  if (match && match[1]) {
+    return match[1];
+  } else {
+    return null;
+  }
+};
+function getSheetIdFromUrl(url) {
+  const regex = /\/d\/([a-zA-Z0-9-_]+)\/edit#gid=([0-9]+)/;
+  const match = url.match(regex);
+
+  if (match && match.length >= 3) {
+    const sheetId = match[2];
+    return sheetId;
+  } else {
+    return null;
+  }
+}
+
 
 const generateUniqueCode = (length) => {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -35,7 +74,10 @@ const getDate = () => {
 };
 
 module.exports = {
-  getFile,
+  storeFile,
   generateUniqueCode,
   getDate,
+  getFile,
+  extractSpreadsheetId,
+  getSheetIdFromUrl,
 };

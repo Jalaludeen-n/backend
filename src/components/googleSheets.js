@@ -1,83 +1,64 @@
-const credentials = require(' ../../tomorrow-college.json');
+const { extractSpreadsheetId, getSheetIdFromUrl } = require("../util/helper");
+const {
+  createCopy,
+  deleteAllFiles,
+  listFiles,
+  getSheetValues,
+  updateCellValue,
+} = require("../controller/google");
+function formatData(data) {
+  const formattedData = [];
+  let currentQuestion = {};
 
-const jwtClient = new google.auth.JWT(
-  credentials.client_email,
-  null,
-  credentials.private_key,
-  ['https://www.googleapis.com/auth/drive',"https://www.googleapis.com/auth/spreadsheets"] // Specify the necessary scopes
-);
+  for (const row of data) {
+    const [question, type, options] = row;
 
+    if (question && type) {
+      if (currentQuestion.question) {
+        formattedData.push({ ...currentQuestion });
+        currentQuestion = {};
+      }
 
+      currentQuestion.question = question;
+      currentQuestion.type = type;
 
-const updateCellValue = async (spreadsheetId, value) => {
-  try {
-    const tokens = await jwtClient.authorize();
-    const sheets = google.sheets({ version: 'v4', auth: jwtClient });
-
-    const data = [[value]];
-    const resource = {
-      values: data,
-    };
-
-    await sheets.spreadsheets.values.update({
-      spreadsheetId,
-      range: 'test!A2', 
-      valueInputOption: 'RAW',
-      resource,
-    });
-
-    console.log(`Value in A3 updated successfully: ${value}`);
-  } catch (err) {
-    console.error('Error:', err);
+      if (options && options.startsWith("Options")) {
+        const numOptions = parseInt(options.split("(")[1].split(")")[0], 10);
+        currentQuestion.choices = [];
+        for (let i = 1; i <= numOptions; i++) {
+          currentQuestion.choices.push(data[data.indexOf(row) + i][2]);
+        }
+      }
+    }
   }
-};
 
-const createCopy = async (fileId) => {
-  try {
-    // Authorize the client
-    const tokens = await jwtClient.authorize();
-    const drive = google.drive({ version: 'v3', auth: jwtClient });
-
-    // Create a copy of the file
-    const response = await drive.files.copy({
-      fileId,
-      requestBody: {
-        name: 'Copy of My File', // Replace with the desired name for the new copy
-      },
-    });
-
-    console.log('New copy created:');
-    console.log(response.data);
-  } catch (err) {
-    console.error('Error:', err);
+  if (currentQuestion.question) {
+    formattedData.push({ ...currentQuestion });
   }
-};
 
-async function getSheetValues(fileID) {
-  try {
-    // Authorize the client to access the Google Sheets API
-    await jwtClient.authorize();
-
-    // Get the sheets API object
-    const sheets = google.sheets({ version: "v4", auth: jwtClient });
-
-    // Range of cells you want to retrieve, e.g., "Sheet1!A1:C10" to get all values from A1 to C10
-    const range = "test!A1:C10"; // Replace this with the actual range you want to retrieve
-
-    // Get the values from the sheet
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: fileID,
-      range: range,
-    });
-
-    // The response object will contain the values
-    const values = response.data.values;
-
-    console.log(values);
-  } catch (err) {
-    console.error("Error retrieving values:", err.message);
-    
-  }
+  return formattedData;
 }
 
-export { updateCellValue, createCopy, getSheetValues };
+const test = async (email) => {
+  const link =
+    "https://docs.google.com/spreadsheets/d/1zjHBgRgjv3XEFc8WAX6dTRaKBOgoCUw0CBBJmR_hTa4/edit#gid=0";
+  const spreadsheetId = extractSpreadsheetId(link);
+  // const res = await getChartImageUrl(ID);
+  const sheetId = getSheetIdFromUrl(link);
+
+  // const data = await getSheetValues(ID);
+  // const formattedData = formatData(rawData);
+  // await updateCellValue(ID, formattedQuestions);
+
+  // console.log(JSON.stringify(formattedData, null, 2)); // Display formatted data
+
+  // console.log(ID);
+  const response = await createCopy(spreadsheetId, "for view");
+  // await deleteCopy("16DONfjHt-fqtuRJ4fWmg5MdujQCG3AZfhoOgOjz-2Jw");
+  // await deleteAllFiles();
+  // await listFiles();
+};
+
+module.exports = {
+  test,
+};

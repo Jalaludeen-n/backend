@@ -8,12 +8,14 @@ const {
   startGame,
   joinGame,
   getRunningAndPastGame,
-  storeParticipant,
+  getRoles,
   fetchParticipantDetails,
+  fetchGroupDetails,
+  fetchParticipants,
+  selectRole,
 } = require("../components/airtable");
 
 const { fetchGameData } = require("../controller/airtable");
-const { getRole } = require("../components/gameDetails");
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -41,7 +43,7 @@ router.post("/start", async (req, res) => {
 
 router.post("/join", async (req, res) => {
   try {
-    const result = await joinGame(req.body);
+    const result = await joinGame(JSON.parse(req.body.data));
     res.status(200).json(result);
   } catch (error) {
     console.error("Error:", error);
@@ -52,9 +54,7 @@ router.post("/join", async (req, res) => {
 router.get("/running", async (req, res) => {
   try {
     const data = await getRunningAndPastGame();
-    await res
-      .status(200)
-      .json({ data: data.fields, message: "fetched successfully" });
+    await res.status(200).json(data);
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "An error occurred" });
@@ -63,19 +63,49 @@ router.get("/running", async (req, res) => {
 
 router.post("/details", async (req, res) => {
   try {
-    const data = await fetchParticipantDetails(req.body);
-    // const role = await getRole(req.body);
-    // await storeParticipant(req.body, data);
+    const parsedValue = JSON.parse(req.body.data);
+    const data = await fetchParticipantDetails(parsedValue);
+    res.header("Content-Type", "application/json");
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
+router.post("/players", async (req, res) => {
+  try {
+    const parsedValue = JSON.parse(req.body.data);
+    const data = await fetchParticipants(parsedValue);
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
+router.post("/groups", async (req, res) => {
+  try {
+    const parsedValue = JSON.parse(req.body.data);
+    const data = await fetchGroupDetails(parsedValue);
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
 
-    // const pdfFilePath = path.join(__dirname, "./../uploads", "individualPdf.pdf"); // Adjust the path as needed
+router.post("/roles", async (req, res) => {
+  try {
+    const data = await getRoles(req.body);
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
 
-    // Read the PDF file and send along with game details
-    // fs.readFile(pdfFilePath, (err, pdfData) => {
-    //   if (err) {
-    //     console.error("Error reading PDF file:", err);
-    //     return res.status(500).send("Error reading PDF file");
-    //   }
-    //   const base64Pdf = Buffer.from(pdfData).toString("base64");
+router.post("/select-role", async (req, res) => {
+  try {
+    const data = await selectRole(JSON.parse(req.body.data));
     res.status(200).json(data);
   } catch (error) {
     console.error("Error:", error);

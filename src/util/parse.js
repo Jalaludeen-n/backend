@@ -1,4 +1,4 @@
-const { getFile, getDate } = require("./helper");
+const { storeFile, getDate } = require("./helper");
 
 const parseAndFormatRoleData = (roles, uniqueCode, pdfArray) => {
   // const levelDescription = getLevelDescription(pdfArray, roles);
@@ -45,13 +45,13 @@ const parseJoinGameData = (data) => {
   return {
     RoomNumber: data.roomNumber,
     EmailID: data.email,
-    Group: data.group.toUpperCase(),
+    Group: data.group,
   };
 };
 
 const parseAndFormatGameData = (data, uniqueCode, pdf) => {
   const parsedData = JSON.parse(data);
-  const instruction = getFile(
+  const instruction = storeFile(
     pdf,
     `${parsedData.GameName}_GameInstruction.pdf`,
   );
@@ -62,7 +62,7 @@ const parseAndFormatLevelData = (roles, pdfArray, gameData) => {
   const formattedLevelData = [];
   JSON.parse(roles).forEach((data) => {
     for (let index = 0; index < gameData.NumberOfRounds; index++) {
-      const PDFPath = getFile(
+      const PDFPath = storeFile(
         pdfArray,
         `${gameData.GameName}_${data.role}_Level${index + 1}.pdf`,
       );

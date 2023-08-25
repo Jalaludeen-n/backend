@@ -87,7 +87,12 @@ const getRole = async (data) => {
   // Handle case where email exists in assignedRoles
 };
 
-const getRemainingRoles = async (groupName) => {
+const getRemainingRoles = async (roomNumber, groupName) => {
+  if (!roles.length) {
+    const gameID = await fetchGameID(roomNumber);
+    await fetchRolesFromAirtable(gameID);
+    return roles;
+  }
   const unassignedRoles = roles.filter((role) => {
     return !Object.keys(assignedRoles[groupName] || {}).includes(role);
   });
@@ -118,4 +123,5 @@ const assignRoleManually = (groupName, email, role) => {
 module.exports = {
   getRole,
   getRemainingRoles,
+  assignRoleManually,
 };
