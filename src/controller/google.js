@@ -97,7 +97,6 @@ const createCopy = async (fileId, fileName) => {
         name: fileName, // Replace with the desired name for the new copy
       },
     });
-    console.log(response);
     const copyId = response.data.id;
     await drive.permissions.create({
       fileId: copyId,
@@ -108,12 +107,13 @@ const createCopy = async (fileId, fileName) => {
     });
 
     console.log("New copy created:");
+    return copyId;
   } catch (err) {
     console.error("Error:", err);
   }
 };
 
-async function getSheetValues(fileID) {
+async function getSheetValues(fileID, name) {
   try {
     // Authorize the client to access the Google Sheets API
     await jwtClient.authorize();
@@ -122,7 +122,7 @@ async function getSheetValues(fileID) {
     const sheets = google.sheets({ version: "v4", auth: jwtClient });
 
     // Range of cells you want to retrieve, e.g., "Sheet1!A1:C10" to get all values from A1 to C10
-    const range = "Level 1!A1:C"; // Replace this with the actual range you want to retrieve
+    const range = `${name}!A1:C`; // Replace this with the actual range you want to retrieve
 
     // Get the values from the sheet
     const response = await sheets.spreadsheets.values.get({
@@ -132,8 +132,7 @@ async function getSheetValues(fileID) {
 
     // The response object will contain the values
     const values = response.data.values;
-
-    console.log(values);
+    return values;
   } catch (err) {
     console.error("Error retrieving values:", err.message);
   }

@@ -15,6 +15,10 @@ const {
   getRemainingRoles,
   assignRoleManually,
 } = require("../components/gameDetails");
+const {
+  fetchQustions,
+  createCopySheet,
+} = require("../components/googleSheets");
 
 const {
   generateUniqueCode,
@@ -142,15 +146,18 @@ const joinGame = async (data) => {
           data.name,
         );
         const fields = roleSelectionResponse[0].fields;
-        const sheetID = extractSpreadsheetId(fields.GoogleSheet);
+
         if (
           fields.ResultsSubbmision == "Each member does  their own subbmision"
         ) {
+          const sheetName = `${data.group}_${data.name}`;
+          const sheetID = extractSpreadsheetId(fields.GoogleSheet);
+          const copySheetLink = await createCopySheet(sheetID, sheetName);
           const individualSheetData = {
             ParticipantEmail: data.email,
             RoomNumber: data.roomNumber,
             GroupName: data.group,
-            GoogleSheetID: sheetID,
+            GoogleSheetID: copySheetLink,
           };
           await createRecord(individualSheetData, "IndividualSheet");
         } else if (
@@ -161,16 +168,18 @@ const joinGame = async (data) => {
           filed = ["GoogleSheetID"];
           condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.group}")`;
           let groupSheetResponse = await fetchWithContion(
-            "IndividualSheet",
+            "GroupSheet",
             condition,
             filed,
           );
-
           if (!groupSheetResponse) {
+            const sheetName = `${data.groupName}_${data.name}`;
+            const sheetID = extractSpreadsheetId(fields.GoogleSheet);
+            const copySheetLink = await createCopySheet(sheetID, sheetName);
             const groupSheetSheetData = {
               RoomNumber: data.roomNumber,
               GroupName: data.group,
-              GoogleSheetID: sheetID,
+              GoogleSheetID: copySheetLink,
             };
             await createRecord(groupSheetSheetData, "GroupSheet");
           }
@@ -239,7 +248,14 @@ const fetchParticipantDetails = async (data) => {
       roleAutoAssigned = true;
       role = response[0].fields.Role;
       const GameID = response[0].fields.GameID;
-      filed = ["GameName", "GameID", "NumberOfRounds"];
+      filed = [
+        "NumberOfRounds",
+        "GameName",
+        "Instruction",
+        "GameID",
+        "ResultsSubbmision",
+        "ScoreVisibilityForPlayers",
+      ];
       condition = `{GameID} = "${GameID}"`;
       response = await fetchWithContion("Games", condition, filed);
     } else {
@@ -248,7 +264,14 @@ const fetchParticipantDetails = async (data) => {
       response = await fetchWithContion("GameInitiated", condition, filed);
       if (response) {
         condition = `{GameID} = "${response[0].fields.GameID}"`;
-        filed = ["NumberOfRounds", "GameName", "Instruction", "GameID"];
+        filed = [
+          "NumberOfRounds",
+          "GameName",
+          "Instruction",
+          "GameID",
+          "ResultsSubbmision",
+          "ScoreVisibilityForPlayers",
+        ];
         response = await fetchWithContion("Games", condition, filed);
       } else {
         return {
@@ -270,6 +293,8 @@ const fetchParticipantDetails = async (data) => {
       email: data.email,
       roomNumber: data.roomNumber,
       gameID: response[0].fields.GameID,
+      resultsSubbmision: response[0].fields.ResultsSubbmision,
+      scoreVisibilityForPlayers: response[0].fields.ScoreVisibilityForPlayers,
       pdf: gameInstruction,
     };
 
@@ -285,9 +310,73 @@ const fetchParticipantDetails = async (data) => {
   }
 };
 
-const getRoles = async (roomNumber, groupName) => {
+const fetchLevelDetails = async (data) => {
   try {
-    roles = await getRemainingRoles(roomNumber, groupName);
+    let sheetID;
+    let submitCheck = data.submit;
+    if (typeof submitCheck === "undefined") {
+      const subbmisionType = data.resultsSubbmision;
+      let submit = true;
+      if (subbmisionType == "Each member does  their own subbmision") {
+        let filed = ["GoogleSheetID"];
+        let condition = `AND({ParticipantEmail} = "${data.email}",{RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
+        let response = await fetchWithContion(
+          "IndividualSheet",
+          condition,
+          filed,
+        );
+        sheetID = response[0].fields.GoogleSheetID;
+      } else if (
+        subbmisionType == "Each group member can submit  group answer" ||
+        subbmisionType == "Only one peson can submit group answer"
+      ) {
+        let filed = ["GoogleSheetID"];
+        let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
+        let response = await fetchWithContion("GroupSheet", condition, filed);
+
+        sheetID = response[0].fields.GoogleSheetID;
+        if (subbmisionType == "Only one peson can submit group answer") {
+          condition = `AND({GameID} = "${data.gameID}",{Role} = "${data.role}",{Submit} = 0)`;
+          let filed = ["Submit"];
+          let response = await fetchWithContion("Role", condition, filed);
+          if (response) {
+            submit = false;
+          }
+        }
+      }
+    } else {
+      (sheetID = data.sheetID), (submit = data.submit);
+    }
+
+    const qustions = await fetchQustions(sheetID, data.level);
+
+    const fileName = `${data.gameName}_${data.role}_Level${data.level}.pdf`;
+
+    const levelInstruction = await getFile(fileName);
+
+    responseData = {
+      qustions: qustions,
+      instruction: levelInstruction,
+      subbmisionType,
+      submit,
+      sheetID,
+    };
+
+    return {
+      success: true,
+      data: responseData,
+      message: "Data fetched",
+    };
+  } catch (error) {
+    console.error("Error joining game:", error);
+    throw error;
+  }
+};
+
+const getRoles = async (data) => {
+  try {
+    roles = await getRemainingRoles(data.roomNumber, data.groupName);
+    console.log(roles);
 
     return {
       success: true,
@@ -302,9 +391,20 @@ const getRoles = async (roomNumber, groupName) => {
 const selectRole = async (data) => {
   try {
     assignRoleManually(data.groupName, data.email, data.role);
+    let filed = ["RoomNumber", "GroupName", "ParticipantEmail"];
+    let condition = `AND({RoomNumber} = "${data.roomNumber}",{ParticipantEmail} = "${data.email}")`;
+    let response = await fetchWithContion("Participant", condition, filed);
+    const formattedData = {
+      Role: data.role,
+    };
+    await updateGameInitiatedRecord(
+      "Participant",
+      response[0].id,
+      formattedData,
+    );
     return {
       success: true,
-      message: "Role selected",
+      message: "Role updated",
     };
   } catch (error) {
     console.error("Error selecting role:", error);
@@ -426,7 +526,7 @@ const fetchParticipants = async (data) => {
     if (!rolesAutoAssigned) {
       const remainingRoles = await getRemainingRoles(
         data.roomNumber,
-        data.roomNumber,
+        data.groupName,
       );
       participants.roles = remainingRoles;
     }
@@ -446,16 +546,11 @@ function filterAndCondition(response, emailId, roomNumber) {
   const filteredData = response
     .filter(
       (item) =>
-        item.fields &&
-        item.fields.Role &&
-        item.fields.Name &&
-        item.fields.ParticipantEmail &&
-        item.fields.GameID &&
         item.fields.ParticipantEmail !== emailId &&
         item.fields.RoomNumber !== roomNumber,
     )
     .map((item) => ({
-      Role: item.fields.Role,
+      Role: item.fields.Role || "Not Selected",
       Name: item.fields.Name,
       ParticipantEmail: item.fields.ParticipantEmail,
       GameID: item.fields.GameID,
@@ -463,6 +558,55 @@ function filterAndCondition(response, emailId, roomNumber) {
 
   return filteredData;
 }
+const storeAnsweres = async (data) => {
+  try {
+    let filed = ["ResultsSubbmision", "IndividualInstructionsPerRound"];
+    let condition = `{GameID} = "${data.gameID}"`;
+    let response = await fetchWithContion("Games", condition, filed);
+    const subbmisionType = response[0].fields.ResultsSubbmision;
+    let sheetID;
+    if (subbmisionType == "Each member does  their own subbmision") {
+      let filed = ["GoogleSheetID"];
+      let condition = `AND({ParticipantEmail} = "${data.email}",{RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
+      let response = await fetchWithContion(
+        "IndividualSheet",
+        condition,
+        filed,
+      );
+      sheetID = response[0].fields.GoogleSheetID;
+    } else if (
+      subbmisionType == "Each group member can submit  group answer" ||
+      subbmisionType == "Only one peson can submit group answer"
+    ) {
+      let filed = ["GoogleSheetID"];
+      let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
+      let response = await fetchWithContion("GroupSheet", condition, filed);
+
+      sheetID = response[0].fields.GoogleSheetID;
+    }
+
+    const qustions = await fetchQustions(sheetID, data.level);
+    console.log(qustions);
+
+    const fileName = `${data.gameName}_${data.role}_Level${data.level}.pdf`;
+
+    const levelInstruction = await getFile(fileName);
+
+    responseData = {
+      qustions: qustions,
+      instruction: levelInstruction,
+    };
+
+    return {
+      success: true,
+      data: responseData,
+      message: "Data fetched",
+    };
+  } catch (error) {
+    console.error("Error joining game:", error);
+    throw error;
+  }
+};
 
 module.exports = {
   startGame,
@@ -474,4 +618,6 @@ module.exports = {
   selectRole,
   fetchGroupDetails,
   fetchParticipants,
+  fetchLevelDetails,
+  storeAnsweres,
 };

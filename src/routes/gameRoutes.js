@@ -13,6 +13,8 @@ const {
   fetchGroupDetails,
   fetchParticipants,
   selectRole,
+  fetchLevelDetails,
+  storeAnsweres,
 } = require("../components/airtable");
 
 const { fetchGameData } = require("../controller/airtable");
@@ -72,6 +74,29 @@ router.post("/details", async (req, res) => {
     res.status(500).json({ error: "An error occurred" });
   }
 });
+
+router.post("/answeres", async (req, res) => {
+  try {
+    const parsedValue = JSON.parse(req.body.data);
+    const data = await storeAnsweres(parsedValue);
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
+
+router.post("/level", async (req, res) => {
+  try {
+    const parsedValue = JSON.parse(req.body.data);
+    const data = await fetchLevelDetails(parsedValue);
+    res.header("Content-Type", "application/json");
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
 router.post("/players", async (req, res) => {
   try {
     const parsedValue = JSON.parse(req.body.data);
@@ -95,7 +120,7 @@ router.post("/groups", async (req, res) => {
 
 router.post("/roles", async (req, res) => {
   try {
-    const data = await getRoles(req.body);
+    const data = await getRoles(req.body.data);
     res.status(200).json(data);
   } catch (error) {
     console.error("Error:", error);

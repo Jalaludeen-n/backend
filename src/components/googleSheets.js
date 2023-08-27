@@ -39,26 +39,29 @@ function formatData(data) {
   return formattedData;
 }
 
-const test = async (email) => {
-  const link =
-    "https://docs.google.com/spreadsheets/d/1zjHBgRgjv3XEFc8WAX6dTRaKBOgoCUw0CBBJmR_hTa4/edit#gid=0";
-  const spreadsheetId = extractSpreadsheetId(link);
-  // const res = await getChartImageUrl(ID);
-  const sheetId = getSheetIdFromUrl(link);
+const fetchQustions = async (ID, level) => {
+  const sheetName = "test";
 
-  // const data = await getSheetValues(ID);
-  // const formattedData = formatData(rawData);
+  const data = await getSheetValues(ID, sheetName);
+  const formattedData = formatData(data);
+  formattedData.splice(0, 1);
+  return formattedData;
+
   // await updateCellValue(ID, formattedQuestions);
 
   // console.log(JSON.stringify(formattedData, null, 2)); // Display formatted data
 
   // console.log(ID);
-  const response = await createCopy(spreadsheetId, "for view");
   // await deleteCopy("16DONfjHt-fqtuRJ4fWmg5MdujQCG3AZfhoOgOjz-2Jw");
   // await deleteAllFiles();
   // await listFiles();
 };
 
+const createCopySheet = async (id, name) => {
+  const response = await createCopy(id, name);
+  return response;
+};
 module.exports = {
-  test,
+  fetchQustions,
+  createCopySheet,
 };
