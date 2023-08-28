@@ -48,7 +48,7 @@ router.get("/create-webhook", async (req, res) => {
   }
 });
 
-router.get("/list-webhook", async (req, res) => {
+router.get("/list", async (req, res) => {
   try {
     const response = await axios.get(
       `https://api.airtable.com/v0/bases/${baseId}/webhooks`,
@@ -91,7 +91,5 @@ router.delete("/delete-webhook", async (req, res) => {
     res.status(500).json({ error: "Error deleting webhook" });
   }
 });
-
-
 
 module.exports = router;

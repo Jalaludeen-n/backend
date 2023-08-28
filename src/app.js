@@ -37,22 +37,27 @@ app.post("/webhook", async (req, res) => {
     console.log("Received webhook:");
     const webhookId = req.body.webhook.id;
     const webhookDetails = await fetchAndProcessPayloads(webhookId);
-    const lastChangedRecord = findLastChangedRecord(webhookDetails);
-    console.log(lastChangedRecord);
-    console.log("__________________");
-    const { GameID, RoomNumber, GroupName } = getIDs(lastChangedRecord);
-    if (isNewUserAdded(lastChangedRecord)) {
-      console.log("email");
-      wss.sockets.emit("participants", true);
-    } else if (isRoleAdded(lastChangedRecord)) {
-      console.log("role");
-      wss.sockets.emit("participants", true);
-    } else if (isLevelUpdated(lastChangedRecord)) {
-      const level =
-        lastChangedRecord.current.cellValuesByFieldId.fldo6NqQFxe3QsAGT;
-      await updateAllUserRounds(GameID, RoomNumber, GroupName, level);
-      wss.sockets.emit("message", level);
-      console.log("Level updated:", level);
+    if (webhookDetails.changedTablesById.tblIDHrce5wFKeOya.changedRecordsById) {
+      const lastChangedRecord = findLastChangedRecord(webhookDetails);
+      const ids = getIDs(lastChangedRecord);
+      if (ids) {
+        const { GameID, RoomNumber, GroupName } = ids;
+        if (isNewUserAdded(lastChangedRecord)) {
+          console.log("email");
+        } else if (isRoleAdded(lastChangedRecord)) {
+          console.log("role");
+          wss.sockets.emit("participants", "ds");
+        } else if (isLevelUpdated(lastChangedRecord)) {
+          console.log("Level");
+          const level =
+            lastChangedRecord.current.cellValuesByFieldId.fldo6NqQFxe3QsAGT;
+          await updateAllUserRounds(GameID, RoomNumber, GroupName, level);
+          wss.sockets.emit("level", level);
+          console.log("Level updated:", level);
+        }
+      } else {
+        console.log("IDs not available");
+      }
     }
   } catch (error) {
     console.error("Error processing webhook:", error);

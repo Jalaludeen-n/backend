@@ -508,6 +508,7 @@ const fetchGroupDetails = async (data) => {
 
 const fetchParticipants = async (data) => {
   try {
+    console.log(data);
     const fetchedFields = ["Role", "ParticipantEmail", "Name", "GameID"];
     const condition = `AND({RoomNumber} = "${data.roomNumber}", {GroupName} = "${data.groupName}")`;
 
@@ -517,6 +518,7 @@ const fetchParticipants = async (data) => {
       condition,
       fetchedFields,
     );
+    console.log(response);
 
     const filteredparticipants = filterAndCondition(
       response,
