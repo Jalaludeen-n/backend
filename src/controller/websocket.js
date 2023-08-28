@@ -12,7 +12,7 @@ function createWebSocketServer(server) {
     console.log("A user connected");
 
     // Emit a welcome message to the connected client
-    // socket.emit("message", "Welcome to the WebSocket server!");
+    socket.emit("message", "Welcome to the WebSocket server!");
 
     socket.on("disconnect", () => {
       console.log("A user disconnected");

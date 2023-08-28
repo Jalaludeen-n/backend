@@ -2,6 +2,7 @@ const {
   createRecord,
   fetchWithContion,
   updateGameInitiatedRecord,
+  updateLevel,
 } = require("../controller/airtable");
 const {
   parseAndFormatGameData,
@@ -18,6 +19,7 @@ const {
 const {
   fetchQustions,
   createCopySheet,
+  storeAnsweresInSheet,
 } = require("../components/googleSheets");
 
 const {
@@ -284,7 +286,6 @@ const fetchParticipantDetails = async (data) => {
     const fileName = `${response[0].fields.GameName}_GameInstruction.pdf`;
 
     const gameInstruction = await getFile(fileName);
-
     responseData = {
       role: role,
       name: name,
@@ -312,11 +313,19 @@ const fetchParticipantDetails = async (data) => {
 
 const fetchLevelDetails = async (data) => {
   try {
+    console.log("fetch level");
+    console.log(data);
     let sheetID;
     let submitCheck = data.submit;
+    let subbmisionType = data.resultsSubbmision;
+    let submit = true;
+    let filed = ["CurrentLevel"];
+    let condition = `AND({RoomNumber} = "${data.roomNumber}",{ParticipantEmail} = "${data.email}",{GroupName} = "${data.groupName}")`;
+    let response = await fetchWithContion("Participant", condition, filed);
+    const formattedData = {
+      CurrentLevel: data.level,
+    };
     if (typeof submitCheck === "undefined") {
-      const subbmisionType = data.resultsSubbmision;
-      let submit = true;
       if (subbmisionType == "Each member does  their own subbmision") {
         let filed = ["GoogleSheetID"];
         let condition = `AND({ParticipantEmail} = "${data.email}",{RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
@@ -353,6 +362,12 @@ const fetchLevelDetails = async (data) => {
     const fileName = `${data.gameName}_${data.role}_Level${data.level}.pdf`;
 
     const levelInstruction = await getFile(fileName);
+
+    await updateGameInitiatedRecord(
+      "Participant",
+      response[0].id,
+      formattedData,
+    );
 
     responseData = {
       qustions: qustions,
@@ -559,7 +574,10 @@ function filterAndCondition(response, emailId, roomNumber) {
   return filteredData;
 }
 const storeAnsweres = async (data) => {
+  console.log(data);
   try {
+    const resultsSubbmision = data.resultsSubbmision;
+    // if (typeof resultsSubbmision === "undefined") {
     let filed = ["ResultsSubbmision", "IndividualInstructionsPerRound"];
     let condition = `{GameID} = "${data.gameID}"`;
     let response = await fetchWithContion("Games", condition, filed);
@@ -585,27 +603,68 @@ const storeAnsweres = async (data) => {
       sheetID = response[0].fields.GoogleSheetID;
     }
 
-    const qustions = await fetchQustions(sheetID, data.level);
-    console.log(qustions);
-
-    const fileName = `${data.gameName}_${data.role}_Level${data.level}.pdf`;
-
-    const levelInstruction = await getFile(fileName);
-
-    responseData = {
-      qustions: qustions,
-      instruction: levelInstruction,
-    };
+    // await storeAnsweresInSheet(sheetID, data.answers, data.level);
+    // } else {
+    await storeAnsweresInSheet(sheetID, data.answers, data.level);
+    // }
 
     return {
       success: true,
-      data: responseData,
+      message: "Ans Stored",
+    };
+  } catch (error) {
+    console.error("Error joining game:", error);
+    throw error;
+  }
+};
+
+const fetchNewParticipant = async (GroupName, GameID, RoomNumber) => {
+  try {
+    console.log(GameID);
+    console.log(GroupName);
+    console.log(RoomNumber);
+    let filed = ["GameID", "Role", "ParticipantEmail", "Name"];
+    let condition = `AND({GroupName} = "${GroupName}",{GameID} = "${GameID}",{RoomNumber} = "${RoomNumber}")`;
+    let response = await fetchWithContion("Participant", condition, filed);
+
+    return {
+      success: true,
+      data: {},
       message: "Data fetched",
     };
   } catch (error) {
     console.error("Error joining game:", error);
     throw error;
   }
+};
+const updateAlltheUserRounds = async (GroupName, GameID, RoomNumber, round) => {
+  try {
+    let filed = ["GameID", "Role", "ParticipantEmail", "Name"];
+    let condition = `AND({GroupName} = "${GroupName}",{GameID} = "${GameID}",{RoomNumber} = "${RoomNumber}")`;
+    let response = await fetchWithContion("Participant", condition, filed);
+    const formatted = formatAndReturnUpdatedData(response, round);
+
+    await updateLevel("Participant", formatted.records);
+
+    return {
+      success: true,
+      data: {},
+      message: "Data fetched",
+    };
+  } catch (error) {
+    console.error("Error joining game:", error);
+    throw error;
+  }
+};
+const formatAndReturnUpdatedData = (records, level) => {
+  const updatedData = records.map((record) => ({
+    id: record.id,
+    fields: {
+      CurrentLevel: level,
+    },
+  }));
+
+  return { records: updatedData };
 };
 
 module.exports = {
@@ -620,4 +679,6 @@ module.exports = {
   fetchParticipants,
   fetchLevelDetails,
   storeAnsweres,
+  fetchNewParticipant,
+  updateAlltheUserRounds,
 };

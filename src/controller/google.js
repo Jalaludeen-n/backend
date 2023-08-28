@@ -14,24 +14,26 @@ const jwtClient = new google.auth.JWT(
   ], // Specify the necessary scopes
 );
 
-const updateCellValue = async (spreadsheetId, value) => {
+const updateCellValues = async (spreadsheetId, values, level) => {
   try {
     await jwtClient.authorize();
     const sheets = google.sheets({ version: "v4", auth: jwtClient });
 
-    // const data = [[value]];
+    // const range = `Output!${column}${startRow}:${column}${endRow}`;
+    const range = `Output!B${level}`;
+
     const resource = {
-      values: value,
+      values: [values], // Assuming "values" is an array of new values
     };
 
     await sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: "test!A1",
+      range,
       valueInputOption: "RAW",
       resource,
     });
 
-    console.log(`Value in A3 updated successfully: ${value}`);
+    console.log(`Values in ${range} updated successfully: ${values}`);
   } catch (err) {
     console.error("Error:", err);
   }
@@ -139,7 +141,7 @@ async function getSheetValues(fileID, name) {
 }
 
 module.exports = {
-  updateCellValue,
+  updateCellValues,
   createCopy,
   getSheetValues,
   deleteAllFiles,

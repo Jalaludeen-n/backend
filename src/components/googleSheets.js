@@ -4,7 +4,7 @@ const {
   deleteAllFiles,
   listFiles,
   getSheetValues,
-  updateCellValue,
+  updateCellValues,
 } = require("../controller/google");
 function formatData(data) {
   const formattedData = [];
@@ -40,7 +40,7 @@ function formatData(data) {
 }
 
 const fetchQustions = async (ID, level) => {
-  const sheetName = "test";
+  const sheetName = `Level ${level}`;
 
   const data = await getSheetValues(ID, sheetName);
   const formattedData = formatData(data);
@@ -56,6 +56,17 @@ const fetchQustions = async (ID, level) => {
   // await deleteAllFiles();
   // await listFiles();
 };
+const storeAnsweresInSheet = async (ID, values, level) => {
+  await updateCellValues(ID, values, level);
+};
+function generateRangeAndColumn(level, questionLength) {
+  if (level >= 1 && level <= 26) {
+    const column = String.fromCharCode(64 + (level + 1)); // A=1, B=2, ..., Z=26
+    return column;
+  } else {
+    throw new Error("Invalid level");
+  }
+}
 
 const createCopySheet = async (id, name) => {
   const response = await createCopy(id, name);
@@ -64,4 +75,5 @@ const createCopySheet = async (id, name) => {
 module.exports = {
   fetchQustions,
   createCopySheet,
+  storeAnsweresInSheet,
 };

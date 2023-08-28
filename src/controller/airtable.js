@@ -1,4 +1,5 @@
 const Airtable = require("airtable");
+const axios = require("axios"); // Import Axios or your preferred HTTP client library
 const apiKey = process.env.AIRTABLE_API_KEY;
 const baseId = process.env.BASE_ID;
 const base = new Airtable({ apiKey }).base(baseId);
@@ -12,6 +13,20 @@ const createRecord = async (data, Table) => {
     throw error; // Throw the error to be caught by the caller
   }
 };
+async function fetchPayloads(webhookId, cursor) {
+  const response = await axios.get(
+    `https://api.airtable.com/v0/bases/${baseId}/webhooks/${webhookId}/payloads`,
+    {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+      params: {
+        cursor: cursor,
+      },
+    },
+  );
+  return response.data;
+}
 
 const fetchGameData = async (tableName, fieldNames) => {
   try {
@@ -70,10 +85,25 @@ const updateGameInitiatedRecord = async (tableName, id, updatedFields) => {
     console.error("Error updating record:", error);
   }
 };
+const updateLevel = async (tableName, updatedFields) => {
+  try {
+    const updatedRecord = await base(tableName).update(updatedFields);
+
+    if (updatedRecord) {
+      console.log("Record updated:");
+    } else {
+      console.log("No record found");
+    }
+  } catch (error) {
+    console.error("Error updating record:", error);
+  }
+};
 
 module.exports = {
   createRecord,
   fetchGameData,
   updateGameInitiatedRecord,
   fetchWithContion,
+  updateLevel,
+  fetchPayloads,
 };
