@@ -1,10 +1,6 @@
-const credentials = require("../../tomorrow-college.json");
 const { google } = require("googleapis");
-const fs = require("fs");
-const path = require("path");
 const CLIENT_EMAIL = process.env.CLIENT_EMAIL;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
-const { PDFDocument } = require("pdf-lib");
 
 const jwtClient = new google.auth.JWT(
   CLIENT_EMAIL,
