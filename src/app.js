@@ -5,6 +5,7 @@ const http = require("http");
 const gameRoutes = require("./routes/gameRoutes");
 const webhookRoutes = require("./routes/webhookRoutes");
 const google = require("./routes/googleRoutes");
+const origin = process.env.ORIGIN;
 
 const socketIO = require("socket.io");
 const {
@@ -21,7 +22,7 @@ const app = express();
 const server = http.createServer(app);
 const wss = socketIO(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: origin,
     methods: ["GET", "POST"],
   },
 });
