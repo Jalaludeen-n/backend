@@ -26,6 +26,7 @@ router.post("/join", async (req, res) => {
   try {
     checkRequestBodyAndDataField(req, res);
     const result = await joinGame(JSON.parse(req.body.data));
+    res.header("Content-Type", "application/json");
     res.status(200).json(result);
   } catch (error) {
     console.error("Error:", error);
@@ -65,18 +66,18 @@ router.get("/running", async (req, res) => {
   }
 });
 
-router.post("/details", async (req, res) => {
-  try {
-    checkRequestBodyAndDataField(req, res);
-    const parsedValue = JSON.parse(req.body.data);
-    const data = await fetchParticipantDetails(parsedValue);
-    res.header("Content-Type", "application/json");
-    res.status(200).json(data);
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ error: "An error occurred" });
-  }
-});
+// router.post("/details", async (req, res) => {
+//   try {
+//     checkRequestBodyAndDataField(req, res);
+//     const parsedValue = JSON.parse(req.body.data);
+//     const data = await fetchParticipantDetails(parsedValue);
+//     res.header("Content-Type", "application/json");
+//     res.status(200).json(data);
+//   } catch (error) {
+//     console.error("Error:", error);
+//     res.status(500).json({ error: "An error occurred" });
+//   }
+// });
 
 router.post("/answeres", async (req, res) => {
   try {

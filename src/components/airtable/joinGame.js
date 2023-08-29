@@ -3,6 +3,7 @@ const { getRole } = require("../../components/gameDetails");
 const { createCopySheet } = require("../../components/googleSheets");
 const { extractSpreadsheetId } = require("../../helpers/helper");
 const { incrementGroupSize, incrementPlayerCount } = require("./update");
+const { getFile } = require("../../helpers/helper");
 const {
   createNewGroup,
   createRunningGameRecord,
@@ -88,8 +89,10 @@ const joinGame = async (data) => {
       Instruction,
       Date,
     } = roleSelectionResponse[0].fields;
+    const roleAutoAssigned = false;
 
     if (RolesAutoSelection) {
+      roleAutoAssigned = true;
       role = await getRole(data);
 
       if (!role) {
@@ -114,6 +117,9 @@ const joinGame = async (data) => {
     const fields = roleSelectionResponse[0].fields;
 
     const GoogleSheetID = await handleResultsSubmission(fields, data);
+    const fileName = `${GameName}_GameInstruction.pdf`;
+
+    const gameInstruction = await getFile(fileName);
 
     responseData = {
       RolesAutoSelection,
@@ -125,6 +131,8 @@ const joinGame = async (data) => {
       Date,
       GameID,
       role,
+      roleAutoAssigned,
+      gameInstruction,
     };
 
     return {
@@ -171,8 +179,7 @@ const handleResultsSubmission = async (fields, data) => {
 };
 
 const checkAndIncrementGroupSize = async (GameID, roomNumber, group) => {
-  const groupResponse = await fetchGroupSize("Group", roomNumber, group);
-  console.log()
+  const groupResponse = await fetchGroupSize(GameID, roomNumber, group);
   if (groupResponse) {
     await incrementGroupSize(groupResponse[0]);
   } else {

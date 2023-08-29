@@ -31,7 +31,7 @@ const isPlayerAlreadyExists = async (data) => {
   return response;
 };
 const fetchGroupSize = async (GameID, roomNumber, group) => {
-  const condition = `AND({GameID} = "${GameID}",{RoomNumber} = "${roomNumber}",{GroupName} = "${group}" )`;
+  const condition = `AND({GameID} = "${GameID}",{RoomNumber} = "${roomNumber}",{GroupName} = "${group}")`;
   const filed = ["Size"];
   return await fetchWithContion("Group", condition, filed);
 };

@@ -140,8 +140,7 @@ const fetchParticipantDetails = async (data) => {
 
 const fetchLevelDetails = async (data) => {
   try {
-    let sheetID;
-    let submitCheck = data.submit;
+    console.log(data);
     let subbmisionType = data.resultsSubbmision;
     let submit = true;
     let filed = ["CurrentLevel"];
@@ -150,39 +149,16 @@ const fetchLevelDetails = async (data) => {
     const formattedData = {
       CurrentLevel: data.level,
     };
-    if (typeof submitCheck === "undefined") {
-      if (subbmisionType == "Each member does  their own subbmision") {
-        let filed = ["GoogleSheetID"];
-        let condition = `AND({ParticipantEmail} = "${data.email}",{RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
-        let response = await fetchWithContion(
-          "IndividualSheet",
-          condition,
-          filed,
-        );
-        sheetID = response[0].fields.GoogleSheetID;
-      } else if (
-        subbmisionType == "Each group member can submit  group answer" ||
-        subbmisionType == "Only one peson can submit group answer"
-      ) {
-        let filed = ["GoogleSheetID"];
-        let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
-        let response = await fetchWithContion("GroupSheet", condition, filed);
-
-        sheetID = response[0].fields.GoogleSheetID;
-        if (subbmisionType == "Only one peson can submit group answer") {
-          condition = `AND({GameID} = "${data.gameID}",{Role} = "${data.role}",{Submit} = 0)`;
-          let filed = ["Submit"];
-          let response = await fetchWithContion("Role", condition, filed);
-          if (response) {
-            submit = false;
-          }
-        }
+    if (subbmisionType == "Only one peson can submit group answer") {
+      condition = `AND({GameID} = "${data.gameID}",{Role} = "${data.role}",{Submit} = 0)`;
+      let filed = ["Submit"];
+      let response = await fetchWithContion("Role", condition, filed);
+      if (response) {
+        submit = false;
       }
-    } else {
-      (sheetID = data.sheetID), (submit = data.submit);
     }
 
-    const qustions = await fetchQustions(sheetID, data.level);
+    const qustions = await fetchQustions(data.sheetID, data.level);
 
     const fileName = `${data.gameName}_${data.role}_Level${data.level}.pdf`;
 
@@ -194,12 +170,10 @@ const fetchLevelDetails = async (data) => {
       formattedData,
     );
 
-    responseData = {
+    const responseData = {
       qustions: qustions,
       instruction: levelInstruction,
-      subbmisionType,
       submit,
-      sheetID,
     };
 
     return {
@@ -208,7 +182,7 @@ const fetchLevelDetails = async (data) => {
       message: "Data fetched",
     };
   } catch (error) {
-    console.error("Error joining game:", error);
+    console.error("Error fetching level details", error);
     throw error;
   }
 };
@@ -223,7 +197,7 @@ const getRoles = async (data) => {
       message: "Roles Fetched",
     };
   } catch (error) {
-    console.error("Error joining game:", error);
+    console.error("Error getting roles", error);
     throw error;
   }
 };
@@ -330,7 +304,7 @@ const fetchGroupDetails = async (data) => {
       Message: "Data fetched",
     };
   } catch (error) {
-    console.error("Error joining game:", error);
+    console.error("Error fetching group details", error);
     throw error;
   }
 };
@@ -438,10 +412,10 @@ const storeAnsweres = async (data) => {
 
     return {
       success: true,
-      message: "Ans Stored",
+      message: "Answeres Stored",
     };
   } catch (error) {
-    console.error("Error joining game:", error);
+    console.error("Error Storing ans", error);
     throw error;
   }
 };
@@ -458,7 +432,7 @@ const fetchNewParticipant = async (GroupName, GameID, RoomNumber) => {
       message: "Data fetched",
     };
   } catch (error) {
-    console.error("Error joining game:", error);
+    console.error("Error Fetching new participant:", error);
     throw error;
   }
 };
@@ -477,7 +451,7 @@ const updateAlltheUserRounds = async (GroupName, GameID, RoomNumber, round) => {
       message: "Data fetched",
     };
   } catch (error) {
-    console.error("Error joining game:", error);
+    console.error("Error updating all the user round:", error);
     throw error;
   }
 };
