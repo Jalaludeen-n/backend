@@ -1,4 +1,7 @@
-const { extractSpreadsheetId, getSheetIdFromUrl } = require("../util/helper");
+const {
+  extractSpreadsheetId,
+  getSheetIdFromUrl,
+} = require("../helpers/helper");
 const {
   createCopy,
   deleteAllFiles,
@@ -46,15 +49,6 @@ const fetchQustions = async (ID, level) => {
   const formattedData = formatData(data);
   formattedData.splice(0, 1);
   return formattedData;
-
-  // await updateCellValue(ID, formattedQuestions);
-
-  // console.log(JSON.stringify(formattedData, null, 2)); // Display formatted data
-
-  // console.log(ID);
-  // await deleteCopy("16DONfjHt-fqtuRJ4fWmg5MdujQCG3AZfhoOgOjz-2Jw");
-  // await deleteAllFiles();
-  // await listFiles();
 };
 const storeAnsweresInSheet = async (ID, values, level) => {
   await updateCellValues(ID, values, level);

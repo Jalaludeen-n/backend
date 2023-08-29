@@ -44,17 +44,13 @@ app.post("/webhook", async (req, res) => {
       if (ids) {
         const { GameID, RoomNumber, GroupName } = ids;
         if (isNewUserAdded(lastChangedRecord)) {
-          console.log("email");
         } else if (isRoleAdded(lastChangedRecord)) {
-          console.log("role");
           wss.sockets.emit("participants", "ds");
         } else if (isLevelUpdated(lastChangedRecord)) {
-          console.log("Level");
           const level =
             lastChangedRecord.current.cellValuesByFieldId.fldo6NqQFxe3QsAGT;
           await updateAllUserRounds(GameID, RoomNumber, GroupName, level);
           wss.sockets.emit("level", level);
-          console.log("Level updated:", level);
         }
       } else {
         console.log("IDs not available");

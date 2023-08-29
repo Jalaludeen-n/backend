@@ -95,8 +95,6 @@ const getRemainingRoles = async (roomNumber, groupName) => {
   const unassignedRoles = roles.filter((role) => {
     return !Object.keys(assignedRoles[groupName] || {}).includes(role);
   });
-  console.log("indeis");
-  console.log(unassignedRoles);
 
   if (unassignedRoles.length === 0) {
     const unassignedDupRoles = duplicateRoles.filter((role) => {

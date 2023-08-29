@@ -1,12 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+
 const {
   createGame,
   startGame,
-  joinGame,
   getRunningAndPastGame,
   getRoles,
   fetchParticipantDetails,
@@ -17,13 +15,27 @@ const {
   storeAnsweres,
 } = require("../components/airtable");
 
+const { joinGame } = require("./../components/airtable/joinGame");
+
 const { fetchGameData } = require("../controller/airtable");
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
+router.post("/join", async (req, res) => {
+  try {
+    checkRequestBodyAndDataField(req, res);
+    const result = await joinGame(JSON.parse(req.body.data));
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
+
 router.post("/new", upload.array("pdf"), async (req, res) => {
   try {
+    checkCreateGameParams(req, res);
     createGame(req.files, req.body.data, req.body.roles);
     res.status(200).json({ message: "Game saved successfully" });
   } catch (error) {
@@ -34,19 +46,9 @@ router.post("/new", upload.array("pdf"), async (req, res) => {
 
 router.post("/start", async (req, res) => {
   try {
-    console.log(req.body.data);
+    checkRequestBodyAndDataField(req, res);
     startGame(JSON.parse(req.body.data));
     res.status(200).json({ message: "Game Started successfully" });
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ error: "An error occurred" });
-  }
-});
-
-router.post("/join", async (req, res) => {
-  try {
-    const result = await joinGame(JSON.parse(req.body.data));
-    res.status(200).json(result);
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "An error occurred" });
@@ -65,6 +67,7 @@ router.get("/running", async (req, res) => {
 
 router.post("/details", async (req, res) => {
   try {
+    checkRequestBodyAndDataField(req, res);
     const parsedValue = JSON.parse(req.body.data);
     const data = await fetchParticipantDetails(parsedValue);
     res.header("Content-Type", "application/json");
@@ -77,6 +80,7 @@ router.post("/details", async (req, res) => {
 
 router.post("/answeres", async (req, res) => {
   try {
+    checkRequestBodyAndDataField(req, res);
     const parsedValue = JSON.parse(req.body.data);
     const data = await storeAnsweres(parsedValue);
     res.status(200).json(data);
@@ -88,6 +92,7 @@ router.post("/answeres", async (req, res) => {
 
 router.post("/level", async (req, res) => {
   try {
+    checkRequestBodyAndDataField(req, res);
     const parsedValue = JSON.parse(req.body.data);
     const data = await fetchLevelDetails(parsedValue);
     res.header("Content-Type", "application/json");
@@ -99,6 +104,7 @@ router.post("/level", async (req, res) => {
 });
 router.post("/players", async (req, res) => {
   try {
+    checkRequestBodyAndDataField(req, res);
     const parsedValue = JSON.parse(req.body.data);
     const data = await fetchParticipants(parsedValue);
     res.status(200).json(data);
@@ -109,6 +115,7 @@ router.post("/players", async (req, res) => {
 });
 router.post("/groups", async (req, res) => {
   try {
+    checkRequestBodyAndDataField(req, res);
     const parsedValue = JSON.parse(req.body.data);
     const data = await fetchGroupDetails(parsedValue);
     res.status(200).json(data);
@@ -120,6 +127,7 @@ router.post("/groups", async (req, res) => {
 
 router.post("/roles", async (req, res) => {
   try {
+    checkRequestBodyAndDataField(req, res);
     const data = await getRoles(req.body.data);
     res.status(200).json(data);
   } catch (error) {
@@ -130,6 +138,7 @@ router.post("/roles", async (req, res) => {
 
 router.post("/select-role", async (req, res) => {
   try {
+    checkRequestBodyAndDataField(req, res);
     const data = await selectRole(JSON.parse(req.body.data));
     res.status(200).json(data);
   } catch (error) {
@@ -148,5 +157,36 @@ router.get("/list", async (req, res) => {
     res.status(500).json({ error: "An error occurred" });
   }
 });
+
+const checkRequestBodyAndDataField = (req, res) => {
+  if (!req.body) {
+    return res.status(400).json({ error: "Request body is missing" });
+  }
+
+  const requestData = req.body.data;
+
+  if (!requestData) {
+    return res
+      .status(400)
+      .json({ error: "'data' field is missing in the request body" });
+  }
+};
+const checkCreateGameParams = (req, res) => {
+  if (!req.files) {
+    return res.status(400).json({ error: "No files uploaded" });
+  }
+
+  if (!req.body || !req.body.data) {
+    return res
+      .status(400)
+      .json({ error: "'data' field is missing in the request body" });
+  }
+
+  if (!req.body.roles) {
+    return res
+      .status(400)
+      .json({ error: "'roles' field is missing in the request body" });
+  }
+};
 
 module.exports = router;

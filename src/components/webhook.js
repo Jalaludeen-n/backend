@@ -43,8 +43,6 @@ const isNewUserAdded = (lastChangedRecord) => {
 
 const isRoleAdded = (lastChangedRecord) => {
   const roleFieldId = "fldRzre0LCkn53U3f";
-  console.log("+_++++++++");
-  console.log(lastChangedRecord.current.cellValuesByFieldId[roleFieldId]);
   return (
     lastChangedRecord.current.cellValuesByFieldId[roleFieldId] &&
     lastChangedRecord.previous.cellValuesByFieldId[roleFieldId] !==
