@@ -2,12 +2,14 @@ const credentials = require("../../tomorrow-college.json");
 const { google } = require("googleapis");
 const fs = require("fs");
 const path = require("path");
+const CLIENT_EMAIL = process.env.CLIENT_EMAIL;
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const { PDFDocument } = require("pdf-lib");
 
 const jwtClient = new google.auth.JWT(
-  credentials.client_email,
+  CLIENT_EMAIL,
   null,
-  credentials.private_key,
+  PRIVATE_KEY,
   [
     "https://www.googleapis.com/auth/drive",
     "https://www.googleapis.com/auth/spreadsheets",
@@ -76,7 +78,6 @@ const listFiles = async () => {
 
     const files = response.data.files;
     if (files.length) {
-      console.log("Files in your Drive:");
       files.forEach((file) => {
         console.log(`${file.name} (${file.id})`);
       });
