@@ -8,7 +8,7 @@ const notificationUrl = process.env.NOTIFICATION_URL;
 router.get("/create-webhook", async (req, res) => {
   try {
     const webhookConfig = {
-      notificationUrl: "https://941a-117-242-222-65.ngrok-free.app/webhook", // Replace with your backend webhook URL
+      notificationUrl: `${notificationUrl}`, // Replace with your backend webhook URL
       specification: {
         options: {
           filters: {
@@ -71,7 +71,7 @@ router.get("/list", async (req, res) => {
 });
 
 router.delete("/delete-webhook", async (req, res) => {
-  const webhookId = "achUkBcfdlFNX7tB3"; // Replace with the ID of the webhook you want to delete
+  const webhookId = req.body.data.webhookId;
 
   try {
     const response = await axios.delete(
