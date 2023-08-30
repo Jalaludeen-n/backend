@@ -216,7 +216,7 @@ const getRoles = async (data) => {
 };
 const selectRole = async (data) => {
   try {
-    assignRoleManually(data.groupName, data.email, data.role);
+    assignRoleManually(data.groupName, data.email, data.role, data.roomNumber);
     let filed = ["RoomNumber", "GroupName", "ParticipantEmail"];
     let condition = `AND({RoomNumber} = "${data.roomNumber}",{ParticipantEmail} = "${data.email}")`;
     let response = await fetchWithCondition("Participant", condition, filed);

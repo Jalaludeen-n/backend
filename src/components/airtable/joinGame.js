@@ -90,15 +90,9 @@ const joinGame = async (data) => {
       Date,
     } = roleSelectionResponse[0].fields;
     let roleAutoAssigned = false;
-
-    console.log(RolesAutoSelection);
-
     if (RolesAutoSelection) {
       roleAutoAssigned = true;
       role = await getRole(data);
-      console.log(role);
-      console.log("__________");
-
       if (!role) {
         return {
           success: false,
