@@ -6,18 +6,17 @@ const readFileAsync = util.promisify(fs.readFile);
 const storeFile = (pdfArray, name) => {
   for (const file of pdfArray) {
     if (file.originalname === name) {
-      onsole.log(`Directory already exists: ${uploadsPath}`);
-    }
-    const uploadsPath = path.join(__dirname, "../uploads");
-    const filePath = path.join(uploadsPath, name);
-    if (!fs.existsSync(uploadsPath)) {
-      fs.mkdirSync(uploadsPath, { recursive: true });
+      const uploadsPath = path.join(__dirname, "../uploads");
+      if (!fs.existsSync(uploadsPath)) {
+        fs.mkdirSync(uploadsPath, { recursive: true });
+        console.log(`Created directory: ${uploadsPath}`);
+      } else {
+        console.log(`Directory already exists: ${uploadsPath}`);
+      }
+      const filePath = path.join(uploadsPath, name);
       fs.writeFileSync(filePath, file.buffer);
-      console.log(`Created directory: ${uploadsPath}`);
-    } else {
-      fs.writeFileSync(filePath, file.buffer);
+      return filePath;
     }
-    return filePath;
   }
   return null;
 };
