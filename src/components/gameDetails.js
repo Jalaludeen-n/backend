@@ -9,7 +9,7 @@ const emailExistsInAssignedRoles = (email) => {
     if (Object.prototype.hasOwnProperty.call(assignedRoles, group)) {
       const roles = assignedRoles[group];
       for (const role in roles) {
-        if (roles[role].includes(email)) {
+        if (Array.isArray(roles[role]) && roles[role].includes(email)) {
           return true;
         }
       }
@@ -102,11 +102,11 @@ const getRemainingRoles = async (roomNumber, groupName) => {
   }
 
   if (!assignedRoles[roomNumber]) {
-    return roles; 
+    return roles;
   }
 
   if (!assignedRoles[roomNumber][groupName]) {
-    return roles; 
+    return roles;
   }
 
   const unassignedRoles = roles.filter((role) => {
