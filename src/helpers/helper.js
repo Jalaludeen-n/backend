@@ -22,7 +22,7 @@ const storeFile = (pdfArray, name) => {
 };
 
 const getFile = async (name) => {
-  const pdfFilePath = path.join(__dirname, "./uploads", name);
+  const pdfFilePath = path.join(__dirname, "../uploads", name);
 
   try {
     const pdfData = await readFileAsync(pdfFilePath);
