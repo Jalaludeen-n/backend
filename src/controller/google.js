@@ -84,9 +84,41 @@ const listFiles = async () => {
     console.error("Error:", err);
   }
 };
+function isValidPrivateKeyFormat(privateKey) {
+  // Expected start and end lines for PEM-encoded private keys
+  const expectedStartLine = "-----BEGIN PRIVATE KEY-----";
+  const expectedEndLine = "-----END PRIVATE KEY-----";
+
+  // Remove leading/trailing whitespace and newlines
+  privateKey = privateKey.trim();
+
+  // Check if the private key starts with the expected start line
+  if (!privateKey.startsWith(expectedStartLine)) {
+    return false;
+  }
+
+  // Check if the private key ends with the expected end line
+  if (!privateKey.endsWith(expectedEndLine)) {
+    return false;
+  }
+
+  // Validate variable escaping
+  if (privateKey.includes("\\n") || privateKey.includes("\\r")) {
+    return false;
+  }
+  console.log("valid");
+
+  return true;
+}
+const test = () => {
+  isValidPrivateKeyFormat(PRIVATE_KEY);
+};
 
 const createCopy = async (fileId, fileName) => {
   try {
+    console.log("private key");
+    console.log(PRIVATE_KEY);
+    isValidPrivateKeyFormat(PRIVATE_KEY);
     await jwtClient.authorize();
     const drive = google.drive({ version: "v3", auth: jwtClient });
 
@@ -143,4 +175,5 @@ module.exports = {
   getSheetValues,
   deleteAllFiles,
   listFiles,
+  test,
 };
