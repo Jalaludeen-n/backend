@@ -6,7 +6,7 @@ const gameRoutes = require("./routes/gameRoutes");
 const webhookRoutes = require("./routes/webhookRoutes");
 const google = require("./routes/googleRoutes");
 const origin = process.env.ORIGIN;
-
+const { test } = require("./controller/google");
 const socketIO = require("socket.io");
 const {
   updateAllUserRounds,
@@ -70,7 +70,7 @@ wss.on("connection", (ws) => {
     console.log("WebSocket connection closed");
   });
 });
-
+test();
 const port = 3001;
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);

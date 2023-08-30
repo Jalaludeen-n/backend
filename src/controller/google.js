@@ -94,16 +94,19 @@ function isValidPrivateKeyFormat(privateKey) {
 
   // Check if the private key starts with the expected start line
   if (!privateKey.startsWith(expectedStartLine)) {
+    console.log("Check if the private key starts with the expected start line");
     return false;
   }
 
   // Check if the private key ends with the expected end line
   if (!privateKey.endsWith(expectedEndLine)) {
+    console.log("Check if the private key ends with the expected end line");
     return false;
   }
 
   // Validate variable escaping
   if (privateKey.includes("\\n") || privateKey.includes("\\r")) {
+    console.log("Validate variable escaping");
     return false;
   }
   console.log("valid");
