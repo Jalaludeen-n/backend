@@ -1,6 +1,6 @@
 const { google } = require("googleapis");
 const CLIENT_EMAIL = process.env.CLIENT_EMAIL;
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const PRIVATE_KEY = process.env.PRIVATE_KEY.replace(/\\n/g, "\n");
 
 const jwtClient = new google.auth.JWT(
   CLIENT_EMAIL,
