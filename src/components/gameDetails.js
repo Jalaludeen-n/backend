@@ -1,4 +1,4 @@
-const { fetchWithContion } = require("../controller/airtable");
+const { fetchWithCondition } = require("../controller/airtable");
 
 const assignedRoles = {}; // { groupName: { email: role } }
 let roles = [];
@@ -48,7 +48,7 @@ const assignRoleToGroup = (groupName, email) => {
 
 const fetchGameID = async (roomNumber) => {
   const condition = `{RoomNumber} = "${roomNumber}"`;
-  const response = await fetchWithContion("GameInitiated", condition, [
+  const response = await fetchWithCondition("GameInitiated", condition, [
     "GameID",
   ]);
   return response[0].fields.GameID;
@@ -57,7 +57,7 @@ const fetchGameID = async (roomNumber) => {
 const fetchRolesFromAirtable = async (gameID) => {
   const condition = `{GameID} = "${gameID}"`;
   const fields = ["Role", "Submit", "Duplicate"];
-  const airtableRoles = await fetchWithContion("Role", condition, fields);
+  const airtableRoles = await fetchWithCondition("Role", condition, fields);
 
   airtableRoles.forEach((data) => {
     roles.push(data.fields.Role);

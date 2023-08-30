@@ -1,6 +1,6 @@
 const {
   createRecord,
-  fetchWithContion,
+  fetchWithCondition,
   updateGameInitiatedRecord,
   updateLevel,
 } = require("../controller/airtable");
@@ -34,17 +34,31 @@ const startGame = async (data) => {
 
 const getRunningAndPastGame = async () => {
   try {
-    const filed = ["Players", "Status", "Date", "RoomNumber", "GameID"];
-    const condition = "";
-    const response = await fetchWithContion("GameInitiated", condition, filed);
-    const res = extractFields(response);
+    const fields = ["Players", "Status", "Date", "RoomNumber", "GameID"];
+    const condition = ""; // Set your condition here
+    const response = await fetchWithCondition(
+      "GameInitiated",
+      condition,
+      fields,
+    );
+
+    if (!response) {
+      return {
+        success: true,
+        data: [],
+        message: "No running games",
+      };
+    }
+
+    const extractedData = extractFields(response);
+
     return {
       success: true,
-      data: res,
+      data: extractedData,
       message: "Data fetched",
     };
   } catch (error) {
-    console.error("Error getting  games:", error);
+    console.error("Error getting games:", error);
     throw error;
   }
 };
@@ -68,7 +82,7 @@ const fetchParticipantDetails = async (data) => {
   try {
     let filed = ["GameID", "Role", "ParticipantEmail", "Name"];
     let condition = `AND({RoomNumber} = "${data.roomNumber}",{ParticipantEmail} = "${data.email}")`;
-    let response = await fetchWithContion("Participant", condition, filed);
+    let response = await fetchWithCondition("Participant", condition, filed);
     let responseData = {};
     let role;
     let name = response && response[0].fields.Name;
@@ -86,11 +100,11 @@ const fetchParticipantDetails = async (data) => {
         "ScoreVisibilityForPlayers",
       ];
       condition = `{GameID} = "${GameID}"`;
-      response = await fetchWithContion("Games", condition, filed);
+      response = await fetchWithCondition("Games", condition, filed);
     } else {
       filed = ["GameID"];
       condition = `{RoomNumber} = "${data.roomNumber}"`;
-      response = await fetchWithContion("GameInitiated", condition, filed);
+      response = await fetchWithCondition("GameInitiated", condition, filed);
       if (response) {
         condition = `{GameID} = "${response[0].fields.GameID}"`;
         filed = [
@@ -101,7 +115,7 @@ const fetchParticipantDetails = async (data) => {
           "ResultsSubbmision",
           "ScoreVisibilityForPlayers",
         ];
-        response = await fetchWithContion("Games", condition, filed);
+        response = await fetchWithCondition("Games", condition, filed);
       } else {
         return {
           success: false,
@@ -140,19 +154,18 @@ const fetchParticipantDetails = async (data) => {
 
 const fetchLevelDetails = async (data) => {
   try {
-    console.log(data);
     let subbmisionType = data.resultsSubbmision;
     let submit = true;
     let filed = ["CurrentLevel"];
     let condition = `AND({RoomNumber} = "${data.roomNumber}",{ParticipantEmail} = "${data.email}",{GroupName} = "${data.groupName}")`;
-    let response = await fetchWithContion("Participant", condition, filed);
+    let response = await fetchWithCondition("Participant", condition, filed);
     const formattedData = {
       CurrentLevel: data.level,
     };
     if (subbmisionType == "Only one peson can submit group answer") {
       condition = `AND({GameID} = "${data.gameID}",{Role} = "${data.role}",{Submit} = 0)`;
       let filed = ["Submit"];
-      let response = await fetchWithContion("Role", condition, filed);
+      let response = await fetchWithCondition("Role", condition, filed);
       if (response) {
         submit = false;
       }
@@ -206,7 +219,7 @@ const selectRole = async (data) => {
     assignRoleManually(data.groupName, data.email, data.role);
     let filed = ["RoomNumber", "GroupName", "ParticipantEmail"];
     let condition = `AND({RoomNumber} = "${data.roomNumber}",{ParticipantEmail} = "${data.email}")`;
-    let response = await fetchWithContion("Participant", condition, filed);
+    let response = await fetchWithCondition("Participant", condition, filed);
     const formattedData = {
       Role: data.role,
     };
@@ -275,18 +288,32 @@ const fetchGroupDetails = async (data) => {
   try {
     let filed = ["GameName", "NumberOfRounds"];
     let condition = `{GameID} = "${data.GameID}"`;
-    let gamesResponse = await fetchWithContion("Games", condition, filed);
-    filed = ["CurrentLevel", "GroupName"];
-    condition = "";
+    let gamesResponse = await fetchWithCondition("Games", condition, filed);
 
-    filed = ["GroupName", "CurrentLevel"];
+    if (!gamesResponse || gamesResponse.length === 0) {
+      return {
+        success: false,
+        Data: null,
+        Message: "Game details not found",
+      };
+    }
+
+    filed = ["CurrentLevel", "GroupName"];
     condition = `AND({GameID} = "${data.GameID}", {RoomNumber} = "${data.RoomNumber}")`;
 
-    let runningGamesResponse = await fetchWithContion(
+    let runningGamesResponse = await fetchWithCondition(
       "Participant",
       condition,
       filed,
     );
+
+    if (!runningGamesResponse || runningGamesResponse.length === 0) {
+      return {
+        success: false,
+        Data: null,
+        Message: "Running game details not found",
+      };
+    }
 
     const totalLevels = gamesResponse[0].fields.NumberOfRounds;
     const level = await groupsWithHighestLevel(
@@ -314,8 +341,7 @@ const fetchParticipants = async (data) => {
     const fetchedFields = ["Role", "ParticipantEmail", "Name", "GameID"];
     const condition = `AND({RoomNumber} = "${data.roomNumber}", {GroupName} = "${data.groupName}")`;
 
-    // Fetch participants based on the condition and required fields
-    const response = await fetchWithContion(
+    const response = await fetchWithCondition(
       "Participant",
       condition,
       fetchedFields,
@@ -382,13 +408,13 @@ const storeAnsweres = async (data) => {
     // if (typeof resultsSubbmision === "undefined") {
     let filed = ["ResultsSubbmision", "IndividualInstructionsPerRound"];
     let condition = `{GameID} = "${data.gameID}"`;
-    let response = await fetchWithContion("Games", condition, filed);
+    let response = await fetchWithCondition("Games", condition, filed);
     const subbmisionType = response[0].fields.ResultsSubbmision;
     let sheetID;
     if (subbmisionType == "Each member does  their own subbmision") {
       let filed = ["GoogleSheetID"];
       let condition = `AND({ParticipantEmail} = "${data.email}",{RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
-      let response = await fetchWithContion(
+      let response = await fetchWithCondition(
         "IndividualSheet",
         condition,
         filed,
@@ -400,7 +426,7 @@ const storeAnsweres = async (data) => {
     ) {
       let filed = ["GoogleSheetID"];
       let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
-      let response = await fetchWithContion("GroupSheet", condition, filed);
+      let response = await fetchWithCondition("GroupSheet", condition, filed);
 
       sheetID = response[0].fields.GoogleSheetID;
     }
@@ -424,7 +450,7 @@ const fetchNewParticipant = async (GroupName, GameID, RoomNumber) => {
   try {
     let filed = ["GameID", "Role", "ParticipantEmail", "Name"];
     let condition = `AND({GroupName} = "${GroupName}",{GameID} = "${GameID}",{RoomNumber} = "${RoomNumber}")`;
-    let response = await fetchWithContion("Participant", condition, filed);
+    let response = await fetchWithCondition("Participant", condition, filed);
 
     return {
       success: true,
@@ -440,7 +466,7 @@ const updateAlltheUserRounds = async (GroupName, GameID, RoomNumber, round) => {
   try {
     let filed = ["GameID", "Role", "ParticipantEmail", "Name"];
     let condition = `AND({GroupName} = "${GroupName}",{GameID} = "${GameID}",{RoomNumber} = "${RoomNumber}")`;
-    let response = await fetchWithContion("Participant", condition, filed);
+    let response = await fetchWithCondition("Participant", condition, filed);
     const formatted = formatAndReturnUpdatedData(response, round);
 
     await updateLevel("Participant", formatted.records);

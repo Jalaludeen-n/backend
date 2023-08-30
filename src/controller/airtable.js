@@ -51,7 +51,7 @@ const fetchGameData = async (tableName, fieldNames) => {
   }
 };
 
-const fetchWithContion = async (tableName, condition, fields) => {
+const fetchWithCondition = async (tableName, condition, fields) => {
   try {
     const queryResult = await base(tableName)
       .select({
@@ -103,7 +103,7 @@ module.exports = {
   createRecord,
   fetchGameData,
   updateGameInitiatedRecord,
-  fetchWithContion,
+  fetchWithCondition,
   updateLevel,
   fetchPayloads,
 };

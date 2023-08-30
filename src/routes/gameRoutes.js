@@ -152,6 +152,12 @@ router.get("/list", async (req, res) => {
   try {
     const fields = ["GameID", "GameName", "Date"];
     const data = await fetchGameData("Games", fields);
+    console.log(data);
+
+    if (data.length === 0) {
+      return res.status(200).json({ message: "No active games" });
+    }
+
     res.status(200).json({ data: data, message: "Game list" });
   } catch (error) {
     console.error("Error:", error);

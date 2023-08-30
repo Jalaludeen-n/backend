@@ -6,17 +6,24 @@ const readFileAsync = util.promisify(fs.readFile);
 const storeFile = (pdfArray, name) => {
   for (const file of pdfArray) {
     if (file.originalname === name) {
-      const uploadsPath = path.join(__dirname, "../uploads");
-      const filePath = path.join(uploadsPath, name);
-      fs.writeFileSync(filePath, file.buffer);
-      return filePath;
+      onsole.log(`Directory already exists: ${uploadsPath}`);
     }
+    const uploadsPath = path.join(__dirname, "../uploads");
+    const filePath = path.join(uploadsPath, name);
+    if (!fs.existsSync(uploadsPath)) {
+      fs.mkdirSync(uploadsPath, { recursive: true });
+      fs.writeFileSync(filePath, file.buffer);
+      console.log(`Created directory: ${uploadsPath}`);
+    } else {
+      fs.writeFileSync(filePath, file.buffer);
+    }
+    return filePath;
   }
   return null;
 };
 
 const getFile = async (name) => {
-  const pdfFilePath = path.join(__dirname, "../uploads", name);
+  const pdfFilePath = path.join(__dirname, "./uploads", name);
 
   try {
     const pdfData = await readFileAsync(pdfFilePath);
@@ -49,7 +56,6 @@ function getSheetIdFromUrl(url) {
     return null;
   }
 }
-
 
 const generateUniqueCode = (length) => {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
