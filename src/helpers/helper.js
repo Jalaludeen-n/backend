@@ -30,7 +30,7 @@ const getFile = async (name) => {
     return base64Pdf;
   } catch (err) {
     console.error("Error reading PDF file:", err);
-    throw new Error("Error reading PDF file");
+    throw err;
   }
 };
 

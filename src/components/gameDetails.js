@@ -73,8 +73,12 @@ const getRole = async (data) => {
 
   if (!emailExistsInAssignedRoles(email)) {
     if (!roles.length) {
+      console.log("inside role");
       const gameID = await fetchGameID(data.roomNumber);
+      console.log(gameID);
+
       await fetchRolesFromAirtable(gameID);
+
       const roleAssigned = assignRoleToGroup(groupName, email);
       return roleAssigned;
     } else {

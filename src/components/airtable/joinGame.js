@@ -91,9 +91,13 @@ const joinGame = async (data) => {
     } = roleSelectionResponse[0].fields;
     let roleAutoAssigned = false;
 
+    console.log(RolesAutoSelection);
+
     if (RolesAutoSelection) {
       roleAutoAssigned = true;
       role = await getRole(data);
+      console.log(role);
+      console.log("__________");
 
       if (!role) {
         return {
@@ -119,27 +123,36 @@ const joinGame = async (data) => {
     const GoogleSheetID = await handleResultsSubmission(fields, data);
     const fileName = `${GameName}_GameInstruction.pdf`;
 
-    const gameInstruction = await getFile(fileName);
+    try {
+      const gameInstruction = await getFile(fileName);
 
-    responseData = {
-      RolesAutoSelection,
-      ResultsSubbmision,
-      GoogleSheetID,
-      GameName,
-      NumberOfRounds,
-      ScoreVisibilityForPlayers,
-      Date,
-      GameID,
-      role,
-      roleAutoAssigned,
-      gameInstruction,
-    };
+      responseData = {
+        RolesAutoSelection,
+        ResultsSubbmision,
+        GoogleSheetID,
+        GameName,
+        NumberOfRounds,
+        ScoreVisibilityForPlayers,
+        Date,
+        GameID,
+        role,
+        roleAutoAssigned,
+        gameInstruction,
+      };
 
-    return {
-      success: true,
-      message: TEXT_MESSAGES.JOIN_SUCCESS,
-      data: responseData,
-    };
+      return {
+        success: true,
+        message: TEXT_MESSAGES.JOIN_SUCCESS,
+        data: responseData,
+      };
+    } catch (error) {
+      console.error("Error fetching game instruction:", error);
+      return {
+        success: false,
+        message: "Error fetching game instruction",
+        error: error.message, // Include the error message in the response
+      };
+    }
   } catch (error) {
     console.error("Error joining game:", error);
   }
