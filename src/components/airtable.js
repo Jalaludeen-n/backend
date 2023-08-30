@@ -160,7 +160,6 @@ const fetchLevelDetails = async (data) => {
     let condition = `AND({RoomNumber} = "${data.roomNumber}",{ParticipantEmail} = "${data.email}",{GroupName} = "${data.groupName}")`;
     let response = await fetchWithCondition("Participant", condition, filed);
 
-    console.log(response);
     const role = response[0].fields.Role;
     const formattedData = {
       CurrentLevel: data.level,
@@ -197,8 +196,6 @@ const fetchLevelDetails = async (data) => {
 
     const qustions = await fetchQustions(sheetID, data.level);
 
-    console.log(role);
-
     const fileName = `${data.gameName}_${role}_Level${data.level}.pdf`;
 
     const levelInstruction = await getFile(fileName);
@@ -228,7 +225,6 @@ const fetchLevelDetails = async (data) => {
 
 const getRoles = async (data) => {
   try {
-    console.log("ds");
     roles = await getRemainingRoles(data.roomNumber, data.groupName);
 
     return {

@@ -119,9 +119,6 @@ const test = () => {
 
 const createCopy = async (fileId, fileName) => {
   try {
-    console.log("private key");
-    console.log(PRIVATE_KEY);
-    isValidPrivateKeyFormat(PRIVATE_KEY);
     await jwtClient.authorize();
     const drive = google.drive({ version: "v3", auth: jwtClient });
 
