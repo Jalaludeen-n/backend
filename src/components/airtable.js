@@ -156,24 +156,50 @@ const fetchLevelDetails = async (data) => {
   try {
     let subbmisionType = data.resultsSubbmision;
     let submit = true;
-    let filed = ["CurrentLevel"];
+    let filed = ["CurrentLevel", "Role"];
     let condition = `AND({RoomNumber} = "${data.roomNumber}",{ParticipantEmail} = "${data.email}",{GroupName} = "${data.groupName}")`;
     let response = await fetchWithCondition("Participant", condition, filed);
+
+    console.log(response);
+    const role = response[0].fields.Role;
     const formattedData = {
       CurrentLevel: data.level,
     };
-    if (subbmisionType == "Only one peson can submit group answer") {
-      condition = `AND({GameID} = "${data.gameID}",{Role} = "${data.role}",{Submit} = 0)`;
-      let filed = ["Submit"];
-      let response = await fetchWithCondition("Role", condition, filed);
-      if (response) {
-        submit = false;
+    let sheetID;
+
+    if (subbmisionType == "Each member does  their own subbmision") {
+      let filed = ["GoogleSheetID"];
+      let condition = `AND({ParticipantEmail} = "${data.email}",{RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
+      let response = await fetchWithCondition(
+        "IndividualSheet",
+        condition,
+        filed,
+      );
+      sheetID = response[0].fields.GoogleSheetID;
+    } else if (
+      subbmisionType == "Each group member can submit  group answer" ||
+      subbmisionType == "Only one peson can submit group answer"
+    ) {
+      let filed = ["GoogleSheetID"];
+      let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
+      let response = await fetchWithCondition("GroupSheet", condition, filed);
+
+      sheetID = response[0].fields.GoogleSheetID;
+      if (subbmisionType == "Only one peson can submit group answer") {
+        condition = `AND({GameID} = "${data.gameID}",{Role} = "${role}",{Submit} = 0)`;
+        let filed = ["Submit"];
+        let response = await fetchWithCondition("Role", condition, filed);
+        if (response) {
+          submit = false;
+        }
       }
     }
 
-    const qustions = await fetchQustions(data.sheetID, data.level);
+    const qustions = await fetchQustions(sheetID, data.level);
 
-    const fileName = `${data.gameName}_${data.role}_Level${data.level}.pdf`;
+    console.log(role);
+
+    const fileName = `${data.gameName}_${role}_Level${data.level}.pdf`;
 
     const levelInstruction = await getFile(fileName);
 
