@@ -89,7 +89,7 @@ const joinGame = async (data) => {
       Instruction,
       Date,
     } = roleSelectionResponse[0].fields;
-    const roleAutoAssigned = false;
+    let roleAutoAssigned = false;
 
     if (RolesAutoSelection) {
       roleAutoAssigned = true;
