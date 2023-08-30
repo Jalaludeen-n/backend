@@ -100,18 +100,24 @@ const getRemainingRoles = async (roomNumber, groupName) => {
     const gameID = await fetchGameID(roomNumber);
     await fetchRolesFromAirtable(gameID);
   }
+
+  if (!assignedRoles[roomNumber]) {
+    return roles; 
+  }
+
+  if (!assignedRoles[roomNumber][groupName]) {
+    return roles; 
+  }
+
   const unassignedRoles = roles.filter((role) => {
-    return !Object.keys(assignedRoles[roomNumber][groupName] || {}).includes(
-      role,
-    );
+    return !Object.keys(assignedRoles[roomNumber][groupName]).includes(role);
   });
 
   if (unassignedRoles.length === 0) {
     const unassignedDupRoles = duplicateRoles.filter((role) => {
       return (
-        !Object.keys(assignedRoles[roomNumber][groupName] || {}).includes(
-          role,
-        ) || assignedRoles[roomNumber][groupName][role].length === 1
+        !Object.keys(assignedRoles[roomNumber][groupName]).includes(role) ||
+        assignedRoles[roomNumber][groupName][role].length === 1
       );
     });
     return unassignedDupRoles;
@@ -119,6 +125,7 @@ const getRemainingRoles = async (roomNumber, groupName) => {
 
   return unassignedRoles;
 };
+
 const assignRoleManually = async (groupName, email, role, roomNumber) => {
   if (!assignedRoles[roomNumber]) {
     assignedRoles[roomNumber] = {};

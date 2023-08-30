@@ -202,6 +202,7 @@ const fetchLevelDetails = async (data) => {
 
 const getRoles = async (data) => {
   try {
+    console.log("ds");
     roles = await getRemainingRoles(data.roomNumber, data.groupName);
 
     return {
