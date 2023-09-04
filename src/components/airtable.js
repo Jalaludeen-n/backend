@@ -70,7 +70,7 @@ const createGame = async (pdf, data, roles) => {
     const gameData = parseAndFormatGameData(data, uniqueCode, pdf);
     console.log("123");
     let levelData;
-    if (gameData.IndividualInstructionsPerRound) {
+    if (!gameData.IndividualInstructionsPerRound) {
       levelData = parseAndFormatLevel(roles, pdf, gameData);
     } else {
       levelData = parseAndFormatLevelData(roles, pdf, gameData);
@@ -208,10 +208,9 @@ const fetchLevelDetails = async (data) => {
     let fileName;
 
     if (gamesResponse) {
-      console.log("nice");
-      fileName = `${data.gameName}_LeveleInstruction.pdf`;
-    } else {
       fileName = `${data.gameName}_${role}_Level${data.level}.pdf`;
+    } else {
+      fileName = `${data.gameName}_LeveleInstruction.pdf`;
     }
 
     const levelInstruction = await getFile(fileName);
