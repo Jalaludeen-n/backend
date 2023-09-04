@@ -55,6 +55,7 @@ const parseAndFormatGameData = (data, uniqueCode, pdf) => {
     pdf,
     `${parsedData.GameName}_GameInstruction.pdf`,
   );
+
   return formatGameData(parsedData, uniqueCode, instruction);
 };
 
@@ -65,6 +66,28 @@ const parseAndFormatLevelData = (roles, pdfArray, gameData) => {
       const PDFPath = storeFile(
         pdfArray,
         `${gameData.GameName}_${data.role}_Level${index + 1}.pdf`,
+      );
+      if (PDFPath) {
+        const formattedData = formatLevelData(
+          data,
+          gameData.GameID,
+          index + 1,
+          PDFPath,
+        );
+        formattedLevelData.push(formattedData);
+      }
+    }
+  });
+
+  return formattedLevelData;
+};
+const parseAndFormatLevel = (roles, pdfArray, gameData) => {
+  const formattedLevelData = [];
+  JSON.parse(roles).forEach((data) => {
+    for (let index = 0; index < gameData.NumberOfRounds; index++) {
+      const PDFPath = storeFile(
+        pdfArray,
+        `${gameData.GameName}_LevelInstruction.pdf`,
       );
       if (PDFPath) {
         const formattedData = formatLevelData(
@@ -98,4 +121,5 @@ module.exports = {
   parseAndFormatLevelData,
   parseGameData,
   parseJoinGameData,
+  parseAndFormatLevel
 };

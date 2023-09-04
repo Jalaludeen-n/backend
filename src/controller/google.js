@@ -145,6 +145,8 @@ const createCopy = async (fileId, fileName) => {
 };
 
 async function getSheetValues(fileID, name) {
+  console.log("_________");
+  console.log(fileID);
   try {
     // Authorize the client to access the Google Sheets API
     await jwtClient.authorize();

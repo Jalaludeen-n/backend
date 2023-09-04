@@ -8,6 +8,7 @@ const {
   parseAndFormatGameData,
   parseAndFormatLevelData,
   parseAndFormatRoleData,
+  parseAndFormatLevel,
   parseGameData,
 } = require("../helpers/parse");
 const {
@@ -67,8 +68,14 @@ const createGame = async (pdf, data, roles) => {
   try {
     const uniqueCode = generateUniqueCode(7);
     const gameData = parseAndFormatGameData(data, uniqueCode, pdf);
+    console.log("123");
+    let levelData;
+    if (gameData.IndividualInstructionsPerRound) {
+      levelData = parseAndFormatLevel(roles, pdf, gameData);
+    } else {
+      levelData = parseAndFormatLevelData(roles, pdf, gameData);
+    }
     const roleData = parseAndFormatRoleData(roles, uniqueCode, pdf);
-    const levelData = parseAndFormatLevelData(roles, pdf, gameData);
 
     await createRecord(gameData, "Games");
     await createRecord(roleData, "Role");
@@ -159,6 +166,9 @@ const fetchLevelDetails = async (data) => {
     let filed = ["CurrentLevel", "Role"];
     let condition = `AND({RoomNumber} = "${data.roomNumber}",{ParticipantEmail} = "${data.email}",{GroupName} = "${data.groupName}")`;
     let response = await fetchWithCondition("Participant", condition, filed);
+    filed = ["IndividualInstructionsPerRound"];
+    condition = `AND({IndividualInstructionsPerRound} = 1 ,{GameID} = "${data.gameID}")`;
+    let gamesResponse = await fetchWithCondition("Games", condition, filed);
 
     const role = response[0].fields.Role;
     const formattedData = {
@@ -195,8 +205,14 @@ const fetchLevelDetails = async (data) => {
     }
 
     const qustions = await fetchQustions(sheetID, data.level);
+    let fileName;
 
-    const fileName = `${data.gameName}_${role}_Level${data.level}.pdf`;
+    if (gamesResponse) {
+      console.log("nice");
+      fileName = `${data.gameName}_LeveleInstruction.pdf`;
+    } else {
+      fileName = `${data.gameName}_${role}_Level${data.level}.pdf`;
+    }
 
     const levelInstruction = await getFile(fileName);
 
