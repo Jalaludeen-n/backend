@@ -181,7 +181,7 @@ const handleResultsSubmission = async (fields, data) => {
       await createGroupSheet(data.roomNumber, data.group, copySheetLink);
       return copySheetLink;
     }
-    groupSheetResponse[0].fields.GoogleSheetID;
+    return groupSheetResponse[0].fields.GoogleSheetID;
   }
 };
 

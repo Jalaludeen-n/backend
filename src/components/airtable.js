@@ -68,7 +68,6 @@ const createGame = async (pdf, data, roles) => {
   try {
     const uniqueCode = generateUniqueCode(7);
     const gameData = parseAndFormatGameData(data, uniqueCode, pdf);
-    console.log("123");
     let levelData;
     if (!gameData.IndividualInstructionsPerRound) {
       levelData = parseAndFormatLevel(roles, pdf, gameData);
