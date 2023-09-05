@@ -6,6 +6,7 @@ const {
   createCopy,
   deleteAllFiles,
   listFiles,
+  getSheetGid,
   getSheetValues,
   updateCellValues,
 } = require("../controller/google");
@@ -50,6 +51,36 @@ const fetchQustions = async (ID, level) => {
   formattedData.splice(0, 1);
   return formattedData;
 };
+const fetchScore = async (ID) => {
+  const sheetName = `Answer details`;
+
+  const data = await getSheetValues(ID, sheetName);
+  const formattedData = formatSheetData(data);
+  return formattedData;
+};
+const fetchEmbedID = async (ID) => {
+  const sheetName = `Sample chart 1`;
+
+  const data = await getSheetGid(ID, sheetName);
+  // const formattedData = formatSheetData(data);
+  return data;
+};
+
+function formatSheetData(sheetData) {
+  const formattedData = {};
+
+  for (let i = 1; i < sheetData.length; i++) {
+    const [level, type, value] = sheetData[i];
+
+    if (type === "Number") {
+      formattedData[`${level}`] = value;
+    } else if (type === "Chart") {
+      formattedData[`${level}`] = value;
+    }
+  }
+
+  return formattedData;
+}
 const storeAnsweresInSheet = async (ID, values, level) => {
   await updateCellValues(ID, values, level);
 };
@@ -70,4 +101,6 @@ module.exports = {
   fetchQustions,
   createCopySheet,
   storeAnsweresInSheet,
+  fetchScore,
+  fetchEmbedID,
 };

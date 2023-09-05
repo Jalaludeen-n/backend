@@ -18,6 +18,8 @@ const {
 const {
   fetchQustions,
   storeAnsweresInSheet,
+  fetchScore,
+  fetchEmbedID,
 } = require("../components/googleSheets");
 
 const { generateUniqueCode, getFile } = require("../helpers/helper");
@@ -549,6 +551,104 @@ const storeAnsweres = async (data) => {
     throw error;
   }
 };
+function extractFields(records, fieldNames) {
+  return records.map((record) => {
+    const extractedFields = {};
+    fieldNames.forEach((fieldName) => {
+      extractedFields[fieldName] = record.get(fieldName);
+    });
+    return extractedFields;
+  });
+}
+
+const getScore = async (data) => {
+  const { groupName, roomNumber, gameID } = data;
+  try {
+    let filed = ["ResultsSubbmision"];
+    let condition = `{gameID} = "${gameID}"`;
+    let response = await fetchWithCondition("Games", condition, filed);
+    const subbmisionType = response[0].fields.ResultsSubbmision;
+    console.log(subbmisionType);
+    let sheetID;
+    if (subbmisionType == "Each member does  their own subbmision") {
+      let filed = ["GoogleSheetID"];
+      let condition = `AND({ParticipantEmail} = "${data.email}",{RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
+      let response = await fetchWithCondition(
+        "IndividualSheet",
+        condition,
+        filed,
+      );
+      sheetID = response[0].fields.GoogleSheetID;
+    } else if (
+      subbmisionType == "Each group member can submit  group answer" ||
+      subbmisionType == "Only one peson can submit group answer"
+    ) {
+      let filed = ["GoogleSheetID"];
+      let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
+      let response = await fetchWithCondition("GroupSheet", condition, filed);
+
+      sheetID = response[0].fields.GoogleSheetID;
+    }
+
+    const score = await fetchScore(sheetID);
+    const responseData = await formatDataForGID(score, sheetID);
+
+    return {
+      success: true,
+      data: responseData,
+      message: "Data fetched",
+      sheetID,
+    };
+  } catch (error) {
+    console.error("Error Fetching score:", error);
+    throw error;
+  }
+};
+async function formatDataForGID(data, sheetID) {
+  const formattedData = {};
+
+  for (const level in data) {
+    if (!data.hasOwnProperty(level)) continue;
+
+    const value = data[level];
+
+    if (!isNaN(value)) {
+      formattedData[level] = {
+        type: "number",
+        score: parseInt(value),
+      };
+    } else {
+      const id = await fetchEmbedID(sheetID); // Replace sheetID with your actual ID retrieval logic
+      formattedData[level] = {
+        type: "chart",
+        id,
+      };
+    }
+  }
+
+  return formattedData;
+}
+
+const getMember = async (data) => {
+  const { groupName, roomNumber, gameID } = data;
+  try {
+    let filed = ["Name", "Role", "ParticipantEmail", "CurrentLevel"];
+    let condition = `AND({GroupName} = "${groupName}",{gameID} = "${gameID}",{RoomNumber} = "${roomNumber}")`;
+    console.log(groupName, roomNumber, gameID);
+    let response = await fetchWithCondition("Participant", condition, filed);
+    const extractedData = extractFields(response, filed);
+    console.log(extractedData);
+
+    return {
+      success: true,
+      data: extractedData,
+      message: "Data fetched",
+    };
+  } catch (error) {
+    console.error("Error Fetching member:", error);
+    throw error;
+  }
+};
 
 const fetchNewParticipant = async (GroupName, GameID, RoomNumber) => {
   try {
@@ -610,4 +710,6 @@ module.exports = {
   fetchNewParticipant,
   updateAlltheUserRounds,
   gameCompleted,
+  getScore,
+  getMember,
 };

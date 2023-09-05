@@ -14,6 +14,8 @@ const {
   fetchLevelDetails,
   storeAnsweres,
   gameCompleted,
+  getScore,
+  getMember,
 } = require("../components/airtable");
 
 const { joinGame } = require("./../components/airtable/joinGame");
@@ -152,6 +154,26 @@ router.post("/roles", async (req, res) => {
   try {
     checkRequestBodyAndDataField(req, res);
     const data = await getRoles(req.body.data);
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
+router.post("/score", async (req, res) => {
+  try {
+    checkRequestBodyAndDataField(req, res);
+    const data = await getScore(JSON.parse(req.body.data));
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
+router.post("/member", async (req, res) => {
+  try {
+    checkRequestBodyAndDataField(req, res);
+    const data = await getMember(JSON.parse(req.body.data));
     res.status(200).json(data);
   } catch (error) {
     console.error("Error:", error);

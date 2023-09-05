@@ -169,6 +169,38 @@ async function getSheetValues(fileID, name) {
   }
 }
 
+async function getSheetGid(fileID, sheetName) {
+  try {
+    // Authorize the client to access the Google Sheets API
+    await jwtClient.authorize();
+
+    // Get the sheets API object
+    const sheets = google.sheets({ version: "v4", auth: jwtClient });
+
+    // Get the spreadsheet metadata to retrieve sheet information
+    const spreadsheet = await sheets.spreadsheets.get({
+      spreadsheetId: fileID,
+    });
+
+    // Find the sheet with the matching name
+    const sheet = spreadsheet.data.sheets.find(
+      (sheet) => sheet.properties.title === sheetName,
+    );
+
+    if (!sheet) {
+      console.error(`Sheet "${sheetName}" not found in the document.`);
+      return null;
+    }
+
+    // Extract and return the gid of the found sheet
+    const gid = sheet.properties.sheetId;
+    return gid;
+  } catch (err) {
+    console.error("Error retrieving sheet gid:", err.message);
+    return null;
+  }
+}
+
 module.exports = {
   updateCellValues,
   createCopy,
@@ -176,4 +208,5 @@ module.exports = {
   deleteAllFiles,
   listFiles,
   test,
+  getSheetGid,
 };
