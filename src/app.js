@@ -31,7 +31,7 @@ app.use(express.json());
 
 app.use("/game", gameRoutes);
 app.use("/google", google);
-app.use("/webhook", webhookRoutes);
+app.use("/webhooks", webhookRoutes);
 app.post("/webhook", async (req, res) => {
   try {
     console.log("Received webhook:");
