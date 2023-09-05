@@ -173,7 +173,7 @@ const fetchLevelDetails = async (data) => {
 
     const role = response[0].fields.Role;
     const formattedData = {
-      CurrentLevel: data.level,
+      CurrentLevel: data.level.toString(),
     };
     let sheetID;
 
@@ -211,7 +211,7 @@ const fetchLevelDetails = async (data) => {
     if (gamesResponse) {
       fileName = `${data.gameName}_${role}_Level${data.level}.pdf`;
     } else {
-      fileName = `${data.gameName}_LeveleInstruction.pdf`;
+      fileName = `${data.gameName}_LevelInstruction.pdf`;
     }
 
     const levelInstruction = await getFile(fileName);
@@ -242,7 +242,7 @@ const updateCurrentLevels = (records, newLevel) => {
   return records.map((record) => ({
     id: record.id,
     fields: {
-      CurrentLevel: newLevel,
+      CurrentLevel: newLevel.toString(),
     },
   }));
 };
@@ -347,28 +347,28 @@ const groupsWithHighestLevel = async (queryResult, totalLevel) => {
       queryResult.forEach((record) => {
         const groupName = record.get("GroupName");
         const level = record.get("CurrentLevel");
+
+        // Convert the level to an integer
+        const numericLevel =
+          level === "Completed" ? Infinity : parseInt(level, 10);
+
         if (
           !groupedRecords[groupName] ||
-          level > groupedRecords[groupName].level
+          numericLevel > groupedRecords[groupName].level
         ) {
-          groupedRecords[groupName] = { groupName, level };
+          groupedRecords[groupName] = { groupName, level: numericLevel };
         }
       });
 
       // Convert the grouped records object into an array and sort by level
       const groupsWithHighestLevel = Object.values(groupedRecords)
         .sort((a, b) => {
-          // Check if either record has a level of "Completed"
-          if (a.level === "Completed" || b.level === "Completed") {
-            // Sort "Completed" higher than any other level
-            return a.level === "Completed" ? -1 : 1;
-          }
           // Sort by numeric level in descending order
           return b.level - a.level;
         })
         .map((record) => ({
           groupName: record.groupName,
-          level: record.level === totalLevel ? "Completed" : record.level,
+          level: record.level === Infinity ? "Completed" : String(record.level),
         }));
 
       // Find and set the highest level
@@ -427,7 +427,7 @@ const fetchGroupDetails = async (data) => {
     const Data = {
       Name: gamesResponse[0].fields.GameName,
       Levels: level.groupsWithHighestLevel,
-      currentLevel: level.highestLevel,
+      currentLevel: level.highestLevel.toString(),
       totalLevels,
     };
 
@@ -689,7 +689,7 @@ const formatAndReturnUpdatedData = (records, level) => {
   const updatedData = records.map((record) => ({
     id: record.id,
     fields: {
-      CurrentLevel: level,
+      CurrentLevel: level.toString(),
     },
   }));
 

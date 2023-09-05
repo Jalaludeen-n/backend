@@ -29,7 +29,7 @@ const joinParticipantToGame = async (
     ParticipantEmail: email,
     Role: role,
     Name: name,
-    CurrentLevel: 0,
+    CurrentLevel: "0",
   };
   await createRecord(formattedData, "Participant");
 };
