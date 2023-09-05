@@ -35,7 +35,6 @@ const fetchGameData = async (tableName, fieldNames) => {
         fields: fieldNames,
       })
       .all();
-
     const gameData = records.map((record) => {
       const data = {};
       fieldNames.forEach((field) => {

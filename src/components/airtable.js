@@ -551,7 +551,7 @@ const storeAnsweres = async (data) => {
     throw error;
   }
 };
-function extractFields(records, fieldNames) {
+function extractFieldsForMember(records, fieldNames) {
   return records.map((record) => {
     const extractedFields = {};
     fieldNames.forEach((fieldName) => {
@@ -636,7 +636,7 @@ const getMember = async (data) => {
     let condition = `AND({GroupName} = "${groupName}",{gameID} = "${gameID}",{RoomNumber} = "${roomNumber}")`;
     console.log(groupName, roomNumber, gameID);
     let response = await fetchWithCondition("Participant", condition, filed);
-    const extractedData = extractFields(response, filed);
+    const extractedData = extractFieldsForMember(response, filed);
     console.log(extractedData);
 
     return {
