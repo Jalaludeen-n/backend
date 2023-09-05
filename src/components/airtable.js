@@ -236,6 +236,57 @@ const fetchLevelDetails = async (data) => {
     throw error;
   }
 };
+const updateCurrentLevels = (records, newLevel) => {
+  return records.map((record) => ({
+    id: record.id,
+    fields: {
+      CurrentLevel: newLevel,
+    },
+  }));
+};
+function allFieldsCompleted(records) {
+  for (const record of records) {
+    const currentLevel = record.fields["CurrentLevel"];
+    if (currentLevel !== "word") {
+      return false;
+    }
+  }
+  return true;
+}
+
+const gameCompleted = async (data) => {
+  try {
+    let filed = ["CurrentLevel", "Role"];
+    let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
+    let response = await fetchWithCondition("Participant", condition, filed);
+    let formattedData = updateCurrentLevels(response, "Completed");
+    for (const record of formattedData) {
+      await updateGameInitiatedRecord("Participant", record.id, record.fields);
+    }
+    filed = ["CurrentLevel"];
+    condition = `{RoomNumber} = "${data.roomNumber}"`;
+    response = await fetchWithCondition("Participant", condition, filed);
+    if (allFieldsCompleted(response)) {
+      filed = ["Status"];
+      let condition = `AND({RoomNumber} = "${data.roomNumber}",{GameID} = "${data.gameID}")`;
+      response = await fetchWithCondition("GameInitiated", condition, filed);
+      const Id = response.id;
+      const updatedFields = {
+        Status: "Completed",
+      };
+      await updateGameInitiatedRecord("GameInitiated", Id, updatedFields);
+    }
+
+    return {
+      success: true,
+      data: {},
+      message: "Data fetched",
+    };
+  } catch (error) {
+    console.error("Error fetching game details", error);
+    throw error;
+  }
+};
 
 const getRoles = async (data) => {
   try {
@@ -304,16 +355,30 @@ const groupsWithHighestLevel = async (queryResult, totalLevel) => {
 
       // Convert the grouped records object into an array and sort by level
       const groupsWithHighestLevel = Object.values(groupedRecords)
-        .sort((a, b) => b.level - a.level)
+        .sort((a, b) => {
+          // Check if either record has a level of "Completed"
+          if (a.level === "Completed" || b.level === "Completed") {
+            // Sort "Completed" higher than any other level
+            return a.level === "Completed" ? -1 : 1;
+          }
+          // Sort by numeric level in descending order
+          return b.level - a.level;
+        })
         .map((record) => ({
           groupName: record.groupName,
           level: record.level === totalLevel ? "Completed" : record.level,
         }));
 
-      return groupsWithHighestLevel;
+      // Find and set the highest level
+      const highestLevel =
+        groupsWithHighestLevel.length > 0
+          ? groupsWithHighestLevel[0].level
+          : "No records";
+
+      return { groupsWithHighestLevel, highestLevel };
     } else {
       console.log("No records found");
-      return null;
+      return { groupsWithHighestLevel: null, highestLevel: "No records" };
     }
   } catch (error) {
     console.error("Error fetching records:", error);
@@ -359,7 +424,9 @@ const fetchGroupDetails = async (data) => {
     );
     const Data = {
       Name: gamesResponse[0].fields.GameName,
-      Levels: level,
+      Levels: level.groupsWithHighestLevel,
+      currentLevel: level.highestLevel,
+      totalLevels,
     };
 
     return {
@@ -542,4 +609,5 @@ module.exports = {
   storeAnsweres,
   fetchNewParticipant,
   updateAlltheUserRounds,
+  gameCompleted,
 };
