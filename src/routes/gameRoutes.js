@@ -8,6 +8,8 @@ const {
   getRunningAndPastGame,
   getRoles,
   fetchParticipantDetails,
+  getLevelStatus,
+  startLevel,
   fetchGroupDetails,
   fetchParticipants,
   selectRole,
@@ -40,7 +42,7 @@ router.post("/join", async (req, res) => {
 router.post("/new", upload.array("pdf"), async (req, res) => {
   try {
     checkCreateGameParams(req, res);
-    createGame(req.files, req.body.data, req.body.roles);
+    await createGame(req.files, req.body.data, req.body.roles);
     res.status(200).json({ message: "Game saved successfully" });
   } catch (error) {
     console.error("Error:", error);
@@ -51,8 +53,28 @@ router.post("/new", upload.array("pdf"), async (req, res) => {
 router.post("/start", async (req, res) => {
   try {
     checkRequestBodyAndDataField(req, res);
-    startGame(JSON.parse(req.body.data));
+    await startGame(JSON.parse(req.body.data));
     res.status(200).json({ message: "Game Started successfully" });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
+router.post("/startLevel", async (req, res) => {
+  try {
+    checkRequestBodyAndDataField(req, res);
+    startLevel(JSON.parse(req.body.data));
+    res.status(200).json({ message: "Game Started successfully" });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
+router.post("/levelStatus", async (req, res) => {
+  try {
+    checkRequestBodyAndDataField(req, res);
+    const data = await getLevelStatus(JSON.parse(req.body.data));
+    res.status(200).json(data);
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "An error occurred" });
@@ -62,7 +84,7 @@ router.post("/start", async (req, res) => {
 router.get("/running", async (req, res) => {
   try {
     const data = await getRunningAndPastGame();
-    await res.status(200).json(data);
+    res.status(200).json(data);
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "An error occurred" });

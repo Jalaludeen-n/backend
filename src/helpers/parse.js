@@ -40,6 +40,14 @@ const parseGameData = (data) => {
     Players: 0,
   };
 };
+const parseLevelData = (data) => {
+  return {
+    GameID: data.gameID,
+    RoomNumber: data.roomNumber,
+    Level: data.level,
+    Status: "Started",
+  };
+};
 
 const parseJoinGameData = (data) => {
   return {
@@ -121,5 +129,6 @@ module.exports = {
   parseAndFormatLevelData,
   parseGameData,
   parseJoinGameData,
-  parseAndFormatLevel
+  parseAndFormatLevel,
+  parseLevelData,
 };

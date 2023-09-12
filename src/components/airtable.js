@@ -10,6 +10,7 @@ const {
   parseAndFormatRoleData,
   parseAndFormatLevel,
   parseGameData,
+  parseLevelData,
 } = require("../helpers/parse");
 const {
   getRemainingRoles,
@@ -164,16 +165,27 @@ const fetchLevelDetails = async (data) => {
   try {
     let subbmisionType = data.resultsSubbmision;
     let submit = true;
-    let filed = ["CurrentLevel", "Role"];
-    let condition = `AND({RoomNumber} = "${data.roomNumber}",{ParticipantEmail} = "${data.email}",{GroupName} = "${data.groupName}")`;
+    let filed = ["CurrentLevel", "Role", "ParticipantEmail"];
+    // let condition = `AND({RoomNumber} = "${data.roomNumber}",{ParticipantEmail} = "${data.email}",{GroupName} = "${data.groupName}")`;
+    let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
+
     let response = await fetchWithCondition("Participant", condition, filed);
     filed = ["IndividualInstructionsPerRound"];
     condition = `AND({IndividualInstructionsPerRound} = 1 ,{GameID} = "${data.gameID}")`;
     let gamesResponse = await fetchWithCondition("Games", condition, filed);
+    const matchingRecord = records.find(
+      (record) => record.fields.ParticipantEmail === data.email,
+    );
 
-    const role = response[0].fields.Role;
+    const role = matchingRecord ? matchingRecord.fields.Role : null;
+    let CurrentLevel;
+    if (data.numberOfRounds >= data.level) {
+      CurrentLevel: data.level.toString();
+    } else {
+      CurrentLevel: "Completed";
+    }
     const formattedData = {
-      CurrentLevel: data.level.toString(),
+      CurrentLevel,
     };
     let sheetID;
 
@@ -193,6 +205,14 @@ const fetchLevelDetails = async (data) => {
       let filed = ["GoogleSheetID"];
       let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
       let response = await fetchWithCondition("GroupSheet", condition, filed);
+      let formattedData = updateCurrentLevels(response, data.level);
+      for (const record of formattedData) {
+        await updateGameInitiatedRecord(
+          "Participant",
+          record.id,
+          record.fields,
+        );
+      }
 
       sheetID = response[0].fields.GoogleSheetID;
       if (subbmisionType == "Only one peson can submit group answer") {
@@ -537,14 +557,18 @@ const storeAnsweres = async (data) => {
       sheetID = response[0].fields.GoogleSheetID;
     }
 
-    // await storeAnsweresInSheet(sheetID, data.answers, data.level);
-    // } else {
     await storeAnsweresInSheet(sheetID, data.answers, data.level);
-    // }
+    filed = ["CurrentLevel"];
+    condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}",{ParticipantEmail} = "${data.email}")`;
+    response = await fetchWithCondition("Participant", condition, filed);
 
+    const level = parseInt(response[0].fields.CurrentLevel);
+
+    await updateLevel("Participant", formatted.records);
     return {
       success: true,
-      message: "Answeres Stored",
+      level: level + 1,
+      message: "Answers Stored",
     };
   } catch (error) {
     console.error("Error Storing ans", error);
@@ -637,12 +661,48 @@ const getMember = async (data) => {
     console.log(groupName, roomNumber, gameID);
     let response = await fetchWithCondition("Participant", condition, filed);
     const extractedData = extractFieldsForMember(response, filed);
-    console.log(extractedData);
 
     return {
       success: true,
       data: extractedData,
       message: "Data fetched",
+    };
+  } catch (error) {
+    console.error("Error Fetching member:", error);
+    throw error;
+  }
+};
+const getLevelStatus = async (data) => {
+  const { RoomNumber, GameID } = data;
+  try {
+    let filed = ["Level", "Status"];
+    let condition = `AND({gameID} = "${GameID}",{RoomNumber} = "${RoomNumber}")`;
+    let response = await fetchWithCondition("Level", condition, filed);
+    let extractedData = [{}];
+    if (response) {
+      extractedData = extractFieldsForMember(response, filed);
+    }
+
+    return {
+      success: true,
+      data: extractedData,
+      message: "Data fetched",
+    };
+  } catch (error) {
+    console.error("Error Fetching member:", error);
+    throw error;
+  }
+};
+
+const startLevel = async (data) => {
+  try {
+    const formattedData = parseLevelData(data);
+    console.log(formattedData);
+    await createRecord(formattedData, "Level");
+
+    return {
+      success: true,
+      message: "Data stored",
     };
   } catch (error) {
     console.error("Error Fetching member:", error);
@@ -712,4 +772,6 @@ module.exports = {
   gameCompleted,
   getScore,
   getMember,
+  getLevelStatus,
+  startLevel,
 };

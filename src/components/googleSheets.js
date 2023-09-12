@@ -6,6 +6,8 @@ const {
   createCopy,
   deleteAllFiles,
   listFiles,
+  downloadPDF,
+  convertToPDF,
   getSheetGid,
   getSheetValues,
   updateCellValues,
@@ -92,6 +94,16 @@ function generateRangeAndColumn(level, questionLength) {
     throw new Error("Invalid level");
   }
 }
+async function getPDF(id, name) {
+  await convertToPDF(
+    "1zjHBgRgjv3XEFc8WAX6dTRaKBOgoCUw0CBBJmR_hTa4",
+    "tdsdest.pdf",
+  );
+}
+async function downloadSheet(id) {
+  const pdfFileId = "1Tr_WuLvRsOES7th--bRe1CfNsdZDwcXO"; // Replace with your PDF file ID
+  await downloadPDF(pdfFileId);
+}
 
 const createCopySheet = async (id, name) => {
   const response = await createCopy(id, name);
@@ -103,4 +115,6 @@ module.exports = {
   storeAnsweresInSheet,
   fetchScore,
   fetchEmbedID,
+  getPDF,
+  downloadSheet,
 };

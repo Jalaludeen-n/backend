@@ -1,6 +1,7 @@
 const { google } = require("googleapis");
 const CLIENT_EMAIL = process.env.CLIENT_EMAIL;
 const PRIVATE_KEY = process.env.PRIVATE_KEY.replace(/\\n/g, "\n");
+const fs = require("fs");
 
 const jwtClient = new google.auth.JWT(
   CLIENT_EMAIL,
@@ -143,6 +144,69 @@ const createCopy = async (fileId, fileName) => {
     console.error("Error:", err);
   }
 };
+const convertToPDF = async (spreadsheetId, pdfFileName) => {
+  try {
+    // Authorize the JWT client
+    await jwtClient.authorize();
+
+    // Create a new instance of the Google Drive API
+    const drive = google.drive({ version: "v3", auth: jwtClient });
+
+    // Define the export options for PDF format
+    const exportOptions = {
+      fileId: spreadsheetId,
+      mimeType: "application/pdf",
+    };
+
+    // Export the Google Sheet as a PDF
+    const response = await drive.files.export(exportOptions, {
+      responseType: "stream",
+    });
+
+    // Create a writable stream to save the PDF to a local file
+    const dest = fs.createWriteStream(pdfFileName);
+
+    // Pipe the response data stream to the file stream
+    response.data
+      .on("end", () => {
+        console.log(`Downloaded ${pdfFileName}`);
+      })
+      .on("error", (err) => {
+        console.error("Error:", err);
+      })
+      .pipe(dest);
+  } catch (err) {
+    console.error("Error:", err);
+  }
+};
+
+const downloadPDF = async (pdfFileId) => {
+  try {
+    await jwtClient.authorize();
+    const drive = google.drive({ version: "v3", auth: jwtClient });
+
+    const response = await drive.files.get({
+      fileId: pdfFileId,
+      alt: "media",
+    });
+    console.log(response);
+
+    if (response && response.data) {
+      const pdfData = response.data;
+      if (pdfData.length > 0) {
+        const fs = require("fs");
+        fs.writeFileSync("downloaded.pdf", pdfData);
+        console.log("PDF downloaded and saved as 'downloaded.pdf'");
+      } else {
+        console.error("Error: The PDF content is empty.");
+      }
+    } else {
+      console.error("Error: Empty response from Google Drive API.");
+    }
+  } catch (err) {
+    console.error("Error:", err.message);
+  }
+};
 
 async function getSheetValues(fileID, name) {
   try {
@@ -209,4 +273,6 @@ module.exports = {
   listFiles,
   test,
   getSheetGid,
+  convertToPDF,
+  downloadPDF,
 };
