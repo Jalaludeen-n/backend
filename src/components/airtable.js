@@ -576,6 +576,7 @@ const storeAnsweres = async (data) => {
   }
 };
 function extractFieldsForMember(records, fieldNames) {
+  console.log(records);
   return records.map((record) => {
     const extractedFields = {};
     fieldNames.forEach((fieldName) => {
@@ -592,7 +593,6 @@ const getScore = async (data) => {
     let condition = `{gameID} = "${gameID}"`;
     let response = await fetchWithCondition("Games", condition, filed);
     const subbmisionType = response[0].fields.ResultsSubbmision;
-    console.log(subbmisionType);
     let sheetID;
     if (subbmisionType == "Each member does  their own subbmision") {
       let filed = ["GoogleSheetID"];
@@ -658,9 +658,10 @@ const getMember = async (data) => {
   try {
     let filed = ["Name", "Role", "ParticipantEmail", "CurrentLevel"];
     let condition = `AND({GroupName} = "${groupName}",{gameID} = "${gameID}",{RoomNumber} = "${roomNumber}")`;
-    console.log(groupName, roomNumber, gameID);
     let response = await fetchWithCondition("Participant", condition, filed);
     const extractedData = extractFieldsForMember(response, filed);
+    console.log("is working");
+    console.log(extractedData);
 
     return {
       success: true,
@@ -672,20 +673,28 @@ const getMember = async (data) => {
     throw error;
   }
 };
+
+const isLevelStarted = (records, level) => {
+  for (const record of records) {
+    if (record.fields && record.fields.Level && record.fields.Status) {
+      if (record.fields.Level === level && record.fields.Status === "Started") {
+        return true;
+      }
+    }
+  }
+  return false;
+};
 const getLevelStatus = async (data) => {
-  const { RoomNumber, GameID } = data;
+  const { RoomNumber, GameID, Level } = data;
   try {
     let filed = ["Level", "Status"];
     let condition = `AND({gameID} = "${GameID}",{RoomNumber} = "${RoomNumber}")`;
     let response = await fetchWithCondition("Level", condition, filed);
-    let extractedData = [{}];
-    if (response) {
-      extractedData = extractFieldsForMember(response, filed);
-    }
+    let extractedData = isLevelStarted(response, Level);
 
     return {
       success: true,
-      data: extractedData,
+      levelStatus: extractedData,
       message: "Data fetched",
     };
   } catch (error) {
@@ -697,7 +706,6 @@ const getLevelStatus = async (data) => {
 const startLevel = async (data) => {
   try {
     const formattedData = parseLevelData(data);
-    console.log(formattedData);
     await createRecord(formattedData, "Level");
 
     return {
