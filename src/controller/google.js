@@ -111,7 +111,6 @@ function isValidPrivateKeyFormat(privateKey) {
     console.log("Validate variable escaping");
     return false;
   }
-  console.log("valid");
 
   return true;
 }
@@ -186,7 +185,6 @@ const downloadPDF = async (pdfFileId) => {
       fileId: pdfFileId,
       alt: "media",
     });
-    console.log(response);
 
     if (response && response.data) {
       const pdfData = response.data;

@@ -29,7 +29,7 @@ const {
 } = require("../components/googleSheets");
 const { convertToPDF } = require("../controller/google");
 
-const { generateUniqueCode, getFile } = require("../helpers/helper");
+const { generateUniqueCode, getFile, getChart } = require("../helpers/helper");
 
 const { fetchRolesAutoSelection } = require("./airtable/condition");
 
@@ -169,11 +169,9 @@ const fetchParticipantDetails = async (data) => {
 
 const fetchLevelDetails = async (data) => {
   try {
-    console.log(data);
     let subbmisionType = data.resultsSubbmision;
     let submit = true;
     let filed = ["CurrentLevel", "Role", "ParticipantEmail"];
-    // let condition = `AND({RoomNumber} = "${data.roomNumber}",{ParticipantEmail} = "${data.email}",{GroupName} = "${data.groupName}")`;
     let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
 
     let response = await fetchWithCondition("Participant", condition, filed);
@@ -544,6 +542,19 @@ const storeAnsweres = async (data) => {
     let response = await fetchWithCondition("Games", condition, filed);
     const subbmisionType = response[0].fields.ResultsSubbmision;
     let sheetID;
+    filed = ["CurrentLevel"];
+    condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}",{ParticipantEmail} = "${data.email}")`;
+    let participandResponse = await fetchWithCondition(
+      "Participant",
+      condition,
+      filed,
+    );
+    const level = parseInt(participandResponse[0].fields.CurrentLevel);
+
+    const formatted = formatAndReturnUpdatedData(
+      participandResponse,
+      level + 1,
+    );
     if (subbmisionType == "Each member does  their own subbmision") {
       let filed = ["GoogleSheetID"];
       let condition = `AND({ParticipantEmail} = "${data.email}",{RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
@@ -552,6 +563,7 @@ const storeAnsweres = async (data) => {
         condition,
         filed,
       );
+      await updateLevel("Participant", formatted.records);
       sheetID = response[0].fields.GoogleSheetID;
     } else if (
       subbmisionType == "Each group member can submit  group answer" ||
@@ -560,19 +572,13 @@ const storeAnsweres = async (data) => {
       let filed = ["GoogleSheetID"];
       let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
       let response = await fetchWithCondition("GroupSheet", condition, filed);
+      await updateLevel("Participant", formatted.records);
 
       sheetID = response[0].fields.GoogleSheetID;
     }
 
     await storeAnsweresInSheet(sheetID, data.answers, data.level);
-    filed = ["CurrentLevel"];
-    condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}",{ParticipantEmail} = "${data.email}")`;
-    response = await fetchWithCondition("Participant", condition, filed);
 
-    const level = parseInt(response[0].fields.CurrentLevel);
-    const formatted = formatAndReturnUpdatedData(response, level + 1);
-
-    await updateLevel("Participant", formatted.records);
     return {
       success: true,
       level: level + 1,
@@ -594,7 +600,7 @@ function extractFieldsForMember(records, fieldNames) {
 }
 
 const getScore = async (data) => {
-  const { groupName, roomNumber, gameID, level } = data;
+  const { groupName, roomNumber, gameID, level, email } = data;
   try {
     let filed = ["ResultsSubbmision"];
     let condition = `{gameID} = "${gameID}"`;
@@ -603,7 +609,7 @@ const getScore = async (data) => {
     let sheetID;
     if (subbmisionType == "Each member does  their own subbmision") {
       let filed = ["GoogleSheetID"];
-      let condition = `AND({ParticipantEmail} = "${data.email}",{RoomNumber} = "${roomNumber}",{GroupName} = "${groupName}")`;
+      let condition = `AND({ParticipantEmail} = "${email}",{RoomNumber} = "${roomNumber}",{GroupName} = "${groupName}")`;
       let response = await fetchWithCondition(
         "IndividualSheet",
         condition,
@@ -625,26 +631,19 @@ const getScore = async (data) => {
     const levelScore = score[`Level ${level}`];
     const pdfFilePath = `fullSheet/${sheetID}.pdf`;
 
-    (async () => {
-      if (await checkFileExists(pdfFilePath)) {
-        console.log(`The PDF file "${pdfFilePath}" already exists.`);
-      } else {
-        await convertToPDF(sheetID, `${sheetID}.pdf`);
-      }
-    })();
-    const scoreName = `${sheetID}_${data.email}_${level}.pdf`;
-    const scorePath = "score/";
-    const responseData = await formatDataForGID(
-      levelScore,
-      pdfFilePath,
-      level,
-      scorePath,
-      scoreName,
-    );
+    if (await checkFileExists(pdfFilePath)) {
+      console.log(`The PDF file "${pdfFilePath}" already exists.`);
+    } else {
+      await convertToPDF(sheetID, `${sheetID}.pdf`);
+    }
+
+    const scoreName = `${sheetID}.pdf`;
+    const { PDFscore, type } = await formatDataForGID(levelScore, scoreName);
 
     return {
       success: true,
-      data: {},
+      type: type,
+      data: PDFscore,
       message: "Data fetched",
       sheetID,
     };
@@ -661,53 +660,22 @@ async function checkFileExists(filePath) {
     return false; // The file does not exist
   }
 }
-async function formatDataForGID(data, pdfPath, level, scorePath, scoreName) {
-  const formattedData = {};
-
+async function formatDataForGID(data, scoreName) {
+  let type;
+  let PDFscore;
   if ("Chart" in data) {
-    formattedData.type = "pdf";
+    type = "pdf";
+    const page = parseInt(data.Chart);
+    PDFscore = await getChart(scoreName, page);
   } else if ("Number" in data) {
-    const numberValue = parseInt(data.Number); // Parse the string as an integer
-    formattedData.numberValue = numberValue; // Assign the parsed number to formattedData
-    formattedData.type = "number"; // Assign the parsed number to formattedData
-    // extractPdfPage(pdfPath, 7, scorePath, scoreName)
-    //   .then(() => {
-    //     console.log(
-    //       `Page ${targetPageNumber} extracted and saved to ${outputPath}`,
-    //     );
-    //   })
-    //   .catch((error) => {
-    //     console.error("Error:", error.message);
-    //   });
+    const numberValue = parseInt(data.Number);
+    PDFscore = numberValue;
+    type = "number";
   } else {
     console.log("Unknown data format");
   }
 
-  return formattedData;
-}
-async function extractPdfPage(pdfPath, pageNumber, outputPath, name) {
-  try {
-    const pdfBuffer = readFileSync(pdfPath);
-    const pdfDoc = await PDFDocument.load(pdfBuffer);
-
-    if (pageNumber < 1 || pageNumber > pdfDoc.getPageCount()) {
-      throw new Error("Invalid page number");
-    }
-
-    const newPdfDoc = await PDFDocument.create();
-    const [copiedPage] = await newPdfDoc.copyPages(pdfDoc, [pageNumber - 1]);
-    newPdfDoc.addPage(copiedPage);
-    const newPdfBytes = await newPdfDoc.save();
-    await fs.mkdir(outputPath, { recursive: true });
-
-    const outputFilePath = `${outputPath}${name}`;
-
-    await fs.writeFile(outputFilePath, newPdfBytes);
-
-    console.log(`Extracted page ${pageNumber} to ${outputFilePath}`);
-  } catch (error) {
-    console.error("Error extracting PDF page:", error.message);
-  }
+  return { type, PDFscore };
 }
 
 const getMember = async (data) => {
@@ -742,7 +710,6 @@ const isLevelStarted = (records, level) => {
 const getLevelStatus = async (data) => {
   const { RoomNumber, GameID, Level } = data;
   try {
-    console.log(data);
     let filed = ["Level", "Status"];
     let condition = `AND({gameID} = "${GameID}",{RoomNumber} = "${RoomNumber}")`;
     let response = await fetchWithCondition("Level", condition, filed);

@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const util = require("util");
 const readFileAsync = util.promisify(fs.readFile);
+const { PDFDocument, rgb } = require("pdf-lib");
 
 const storeFile = (pdfArray, name) => {
   for (const file of pdfArray) {
@@ -30,6 +31,32 @@ const getFile = async (name) => {
     return base64Pdf;
   } catch (err) {
     console.error("Error reading PDF file:", err);
+    throw err;
+  }
+};
+const getChart = async (name, pageNumber) => {
+  const pdfFilePath = path.join(__dirname, "../fullSheet", name);
+
+  try {
+    const pdfData = await readFileAsync(pdfFilePath);
+
+    const pdfDoc = await PDFDocument.load(pdfData);
+
+    // Check if the requested page number is valid
+    if (pageNumber < 1 || pageNumber > pdfDoc.getPageCount()) {
+      throw new Error("Invalid page number");
+    }
+
+    const newPdfDoc = await PDFDocument.create();
+    const [copiedPage] = await newPdfDoc.copyPages(pdfDoc, [pageNumber - 1]);
+    newPdfDoc.addPage(copiedPage);
+
+    const newPdfBytes = await newPdfDoc.save();
+    const base64Page = Buffer.from(newPdfBytes).toString("base64");
+
+    return base64Page;
+  } catch (err) {
+    console.error("Error reading or processing PDF file:", err);
     throw err;
   }
 };
@@ -85,4 +112,5 @@ module.exports = {
   getFile,
   extractSpreadsheetId,
   getSheetIdFromUrl,
+  getChart,
 };

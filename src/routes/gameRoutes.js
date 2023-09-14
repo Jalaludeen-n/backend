@@ -164,7 +164,6 @@ router.post("/groups", async (req, res) => {
   try {
     checkRequestBodyAndDataField(req, res);
     const parsedValue = JSON.parse(req.body.data);
-    console.log(parsedValue);
     const data = await fetchGroupDetails(parsedValue);
     res.status(200).json(data);
   } catch (error) {
@@ -187,6 +186,7 @@ router.post("/score", async (req, res) => {
   try {
     checkRequestBodyAndDataField(req, res);
     const data = await getScore(JSON.parse(req.body.data));
+    res.header("Content-Type", "application/json");
     res.status(200).json(data);
   } catch (error) {
     console.error("Error:", error);
@@ -217,7 +217,7 @@ router.post("/select-role", async (req, res) => {
 
 router.get("/list", async (req, res) => {
   try {
-    const fields = ["GameID", "GameName", "Date"];
+    const fields = ["GameID", "GameName", "Date", "NumberOfRounds"];
     const data = await fetchGameData("Games", fields);
     if (data.length === 0) {
       return res.status(200).json({ message: "No active games" });
