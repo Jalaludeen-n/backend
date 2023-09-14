@@ -10,7 +10,6 @@ const socketIO = require("socket.io");
 const {
   updateAllUserRounds,
   getIDs,
-  fetchNewParticipantForLastRecord,
   isLevelUpdated,
   isRoleAdded,
   isNewUserAdded,

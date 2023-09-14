@@ -164,6 +164,7 @@ router.post("/groups", async (req, res) => {
   try {
     checkRequestBodyAndDataField(req, res);
     const parsedValue = JSON.parse(req.body.data);
+    console.log(parsedValue);
     const data = await fetchGroupDetails(parsedValue);
     res.status(200).json(data);
   } catch (error) {

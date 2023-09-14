@@ -25,7 +25,7 @@ const updateCellValues = async (spreadsheetId, values, level) => {
       values: [values], // Assuming "values" is an array of new values
     };
 
-    await sheets.spreadsheets.values.update({
+    sheets.spreadsheets.values.update({
       spreadsheetId,
       range,
       valueInputOption: "RAW",

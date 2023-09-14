@@ -59,13 +59,6 @@ const isLevelUpdated = (lastChangedRecord) => {
   );
 };
 
-const fetchNewParticipantForLastRecord = async (
-  GameID,
-  RoomNumber,
-  GroupName,
-) => {
-  // Fetch and return participants
-};
 const getIDs = (lastChangedRecord) => {
   const GroupName =
     lastChangedRecord.unchanged.cellValuesByFieldId.fldN6N6X6a5ZTtJU9;
@@ -84,7 +77,6 @@ const updateAllUserRounds = async (GameID, RoomNumber, GroupName, level) => {
 module.exports = {
   updateAllUserRounds,
   getIDs,
-  fetchNewParticipantForLastRecord,
   isLevelUpdated,
   isRoleAdded,
   isNewUserAdded,

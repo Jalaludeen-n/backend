@@ -163,6 +163,7 @@ const fetchParticipantDetails = async (data) => {
 
 const fetchLevelDetails = async (data) => {
   try {
+    console.log(data);
     let subbmisionType = data.resultsSubbmision;
     let submit = true;
     let filed = ["CurrentLevel", "Role", "ParticipantEmail"];
@@ -173,16 +174,16 @@ const fetchLevelDetails = async (data) => {
     filed = ["IndividualInstructionsPerRound"];
     condition = `AND({IndividualInstructionsPerRound} = 1 ,{GameID} = "${data.gameID}")`;
     let gamesResponse = await fetchWithCondition("Games", condition, filed);
-    const matchingRecord = records.find(
+    const matchingRecord = response.find(
       (record) => record.fields.ParticipantEmail === data.email,
     );
 
     const role = matchingRecord ? matchingRecord.fields.Role : null;
     let CurrentLevel;
     if (data.numberOfRounds >= data.level) {
-      CurrentLevel: data.level.toString();
+      CurrentLevel = data.level.toString();
     } else {
-      CurrentLevel: "Completed";
+      CurrentLevel = "Completed";
     }
     const formattedData = {
       CurrentLevel,
@@ -563,6 +564,7 @@ const storeAnsweres = async (data) => {
     response = await fetchWithCondition("Participant", condition, filed);
 
     const level = parseInt(response[0].fields.CurrentLevel);
+    const formatted = formatAndReturnUpdatedData(response, level + 1);
 
     await updateLevel("Participant", formatted.records);
     return {
@@ -576,7 +578,6 @@ const storeAnsweres = async (data) => {
   }
 };
 function extractFieldsForMember(records, fieldNames) {
-  console.log(records);
   return records.map((record) => {
     const extractedFields = {};
     fieldNames.forEach((fieldName) => {
@@ -596,7 +597,7 @@ const getScore = async (data) => {
     let sheetID;
     if (subbmisionType == "Each member does  their own subbmision") {
       let filed = ["GoogleSheetID"];
-      let condition = `AND({ParticipantEmail} = "${data.email}",{RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
+      let condition = `AND({ParticipantEmail} = "${data.email}",{RoomNumber} = "${roomNumber}",{GroupName} = "${groupName}")`;
       let response = await fetchWithCondition(
         "IndividualSheet",
         condition,
@@ -660,8 +661,6 @@ const getMember = async (data) => {
     let condition = `AND({GroupName} = "${groupName}",{gameID} = "${gameID}",{RoomNumber} = "${roomNumber}")`;
     let response = await fetchWithCondition("Participant", condition, filed);
     const extractedData = extractFieldsForMember(response, filed);
-    console.log("is working");
-    console.log(extractedData);
 
     return {
       success: true,
@@ -687,10 +686,14 @@ const isLevelStarted = (records, level) => {
 const getLevelStatus = async (data) => {
   const { RoomNumber, GameID, Level } = data;
   try {
+    console.log(data);
     let filed = ["Level", "Status"];
     let condition = `AND({gameID} = "${GameID}",{RoomNumber} = "${RoomNumber}")`;
     let response = await fetchWithCondition("Level", condition, filed);
-    let extractedData = isLevelStarted(response, Level);
+    let extractedData = [{}];
+    if (response) {
+      extractedData = extractFieldsForMember(response, filed);
+    }
 
     return {
       success: true,
@@ -718,22 +721,6 @@ const startLevel = async (data) => {
   }
 };
 
-const fetchNewParticipant = async (GroupName, GameID, RoomNumber) => {
-  try {
-    let filed = ["GameID", "Role", "ParticipantEmail", "Name"];
-    let condition = `AND({GroupName} = "${GroupName}",{GameID} = "${GameID}",{RoomNumber} = "${RoomNumber}")`;
-    let response = await fetchWithCondition("Participant", condition, filed);
-
-    return {
-      success: true,
-      data: {},
-      message: "Data fetched",
-    };
-  } catch (error) {
-    console.error("Error Fetching new participant:", error);
-    throw error;
-  }
-};
 const updateAlltheUserRounds = async (GroupName, GameID, RoomNumber, round) => {
   try {
     let filed = ["GameID", "Role", "ParticipantEmail", "Name"];
@@ -775,7 +762,6 @@ module.exports = {
   fetchParticipants,
   fetchLevelDetails,
   storeAnsweres,
-  fetchNewParticipant,
   updateAlltheUserRounds,
   gameCompleted,
   getScore,
