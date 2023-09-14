@@ -4,6 +4,11 @@ const {
   updateGameInitiatedRecord,
   updateLevel,
 } = require("../controller/airtable");
+const fs = require("fs").promises; // Use fs.promises for async/await support
+const { readFileSync } = require("fs");
+const pdf = require("pdf-parse");
+const { PDFDocument, rgb } = require("pdf-lib");
+
 const {
   parseAndFormatGameData,
   parseAndFormatLevelData,
@@ -589,7 +594,7 @@ function extractFieldsForMember(records, fieldNames) {
 }
 
 const getScore = async (data) => {
-  const { groupName, roomNumber, gameID } = data;
+  const { groupName, roomNumber, gameID, level } = data;
   try {
     let filed = ["ResultsSubbmision"];
     let condition = `{gameID} = "${gameID}"`;
@@ -617,11 +622,25 @@ const getScore = async (data) => {
     }
 
     const score = await fetchScore(sheetID);
-    console.log(score);
+    const levelScore = score[`Level ${level}`];
+    const pdfFilePath = `fullSheet/${sheetID}.pdf`;
 
-    await convertToPDF(sheetID, `${sheetID}.pdf`);
-
-    const responseData = await formatDataForGID(score, sheetID);
+    (async () => {
+      if (await checkFileExists(pdfFilePath)) {
+        console.log(`The PDF file "${pdfFilePath}" already exists.`);
+      } else {
+        await convertToPDF(sheetID, `${sheetID}.pdf`);
+      }
+    })();
+    const scoreName = `${sheetID}_${data.email}_${level}.pdf`;
+    const scorePath = "score/";
+    const responseData = await formatDataForGID(
+      levelScore,
+      pdfFilePath,
+      level,
+      scorePath,
+      scoreName,
+    );
 
     return {
       success: true,
@@ -634,28 +653,61 @@ const getScore = async (data) => {
     throw error;
   }
 };
-async function formatDataForGID(data, sheetID) {
+async function checkFileExists(filePath) {
+  try {
+    await fs.access(filePath, fs.constants.F_OK);
+    return true; // The file exists
+  } catch (error) {
+    return false; // The file does not exist
+  }
+}
+async function formatDataForGID(data, pdfPath, level, scorePath, scoreName) {
   const formattedData = {};
 
-  for (const level in data) {
-    if (!data.hasOwnProperty(level)) continue;
-
-    const value = data[level];
-
-    if (!isNaN(value)) {
-      formattedData[level] = {
-        type: "number",
-        score: parseInt(value),
-      };
-    } else {
-      formattedData[level] = {
-        type: "chart",
-        id,
-      };
-    }
+  if ("Chart" in data) {
+    formattedData.type = "pdf";
+  } else if ("Number" in data) {
+    const numberValue = parseInt(data.Number); // Parse the string as an integer
+    formattedData.numberValue = numberValue; // Assign the parsed number to formattedData
+    formattedData.type = "number"; // Assign the parsed number to formattedData
+    // extractPdfPage(pdfPath, 7, scorePath, scoreName)
+    //   .then(() => {
+    //     console.log(
+    //       `Page ${targetPageNumber} extracted and saved to ${outputPath}`,
+    //     );
+    //   })
+    //   .catch((error) => {
+    //     console.error("Error:", error.message);
+    //   });
+  } else {
+    console.log("Unknown data format");
   }
 
   return formattedData;
+}
+async function extractPdfPage(pdfPath, pageNumber, outputPath, name) {
+  try {
+    const pdfBuffer = readFileSync(pdfPath);
+    const pdfDoc = await PDFDocument.load(pdfBuffer);
+
+    if (pageNumber < 1 || pageNumber > pdfDoc.getPageCount()) {
+      throw new Error("Invalid page number");
+    }
+
+    const newPdfDoc = await PDFDocument.create();
+    const [copiedPage] = await newPdfDoc.copyPages(pdfDoc, [pageNumber - 1]);
+    newPdfDoc.addPage(copiedPage);
+    const newPdfBytes = await newPdfDoc.save();
+    await fs.mkdir(outputPath, { recursive: true });
+
+    const outputFilePath = `${outputPath}${name}`;
+
+    await fs.writeFile(outputFilePath, newPdfBytes);
+
+    console.log(`Extracted page ${pageNumber} to ${outputFilePath}`);
+  } catch (error) {
+    console.error("Error extracting PDF page:", error.message);
+  }
 }
 
 const getMember = async (data) => {
