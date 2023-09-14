@@ -11,6 +11,8 @@
 # production
 /build
 
+src/fullSheet
+
 # misc
 .DS_Store
 .env.local
