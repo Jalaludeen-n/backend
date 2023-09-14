@@ -74,15 +74,20 @@ function formatSheetData(sheetData) {
   for (let i = 1; i < sheetData.length; i++) {
     const [level, type, value] = sheetData[i];
 
-    if (type === "Number") {
-      formattedData[`${level}`] = value;
-    } else if (type === "Chart") {
-      formattedData[`${level}`] = value;
+    if (!formattedData[level]) {
+      formattedData[level] = {};
     }
+
+    if (!formattedData[level][type]) {
+      formattedData[level][type] = {};
+    }
+
+    formattedData[level][type] = value;
   }
 
   return formattedData;
 }
+
 const storeAnsweresInSheet = async (ID, values, level) => {
   await updateCellValues(ID, values, level);
 };

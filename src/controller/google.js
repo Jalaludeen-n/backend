@@ -2,6 +2,7 @@ const { google } = require("googleapis");
 const CLIENT_EMAIL = process.env.CLIENT_EMAIL;
 const PRIVATE_KEY = process.env.PRIVATE_KEY.replace(/\\n/g, "\n");
 const fs = require("fs");
+const path = require("path");
 
 const jwtClient = new google.auth.JWT(
   CLIENT_EMAIL,
@@ -130,7 +131,7 @@ const createCopy = async (fileId, fileName) => {
       },
     });
     const copyId = response.data.id;
-    await drive.permissions.create({
+    drive.permissions.create({
       fileId: copyId,
       requestBody: {
         role: "reader",
@@ -146,30 +147,26 @@ const createCopy = async (fileId, fileName) => {
 };
 const convertToPDF = async (spreadsheetId, pdfFileName) => {
   try {
-    // Authorize the JWT client
     await jwtClient.authorize();
-
-    // Create a new instance of the Google Drive API
     const drive = google.drive({ version: "v3", auth: jwtClient });
-
-    // Define the export options for PDF format
     const exportOptions = {
       fileId: spreadsheetId,
       mimeType: "application/pdf",
     };
 
-    // Export the Google Sheet as a PDF
     const response = await drive.files.export(exportOptions, {
       responseType: "stream",
     });
+    const pdfDirectory = "fullSheet";
+    if (!fs.existsSync(pdfDirectory)) {
+      fs.mkdirSync(pdfDirectory);
+    }
 
-    // Create a writable stream to save the PDF to a local file
-    const dest = fs.createWriteStream(pdfFileName);
+    const dest = fs.createWriteStream(path.join(pdfDirectory, pdfFileName));
 
-    // Pipe the response data stream to the file stream
     response.data
       .on("end", () => {
-        console.log(`Downloaded ${pdfFileName}`);
+        console.log(`Downloaded ${pdfFileName}.pdf`);
       })
       .on("error", (err) => {
         console.error("Error:", err);

@@ -22,6 +22,7 @@ const {
   fetchScore,
   fetchEmbedID,
 } = require("../components/googleSheets");
+const { convertToPDF } = require("../controller/google");
 
 const { generateUniqueCode, getFile } = require("../helpers/helper");
 
@@ -616,11 +617,15 @@ const getScore = async (data) => {
     }
 
     const score = await fetchScore(sheetID);
+    console.log(score);
+
+    await convertToPDF(sheetID, `${sheetID}.pdf`);
+
     const responseData = await formatDataForGID(score, sheetID);
 
     return {
       success: true,
-      data: responseData,
+      data: {},
       message: "Data fetched",
       sheetID,
     };
@@ -643,7 +648,6 @@ async function formatDataForGID(data, sheetID) {
         score: parseInt(value),
       };
     } else {
-      const id = await fetchEmbedID(sheetID); // Replace sheetID with your actual ID retrieval logic
       formattedData[level] = {
         type: "chart",
         id,
