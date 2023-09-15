@@ -637,11 +637,7 @@ const getScore = async (data) => {
     const levelScore = score[`Level ${level}`];
     const pdfFilePath = `fullSheet/${sheetID}.pdf`;
 
-    if (await checkFileExists(pdfFilePath)) {
-      console.log(`The PDF file "${pdfFilePath}" already exists.`);
-    } else {
-      await convertToPDF(sheetID, `${sheetID}.pdf`);
-    }
+    await convertToPDF(sheetID, `${sheetID}.pdf`);
 
     const scoreName = `${sheetID}.pdf`;
     const { PDFscore, type } = await formatDataForGID(levelScore, scoreName);

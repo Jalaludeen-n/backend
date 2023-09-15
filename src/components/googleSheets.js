@@ -1,14 +1,8 @@
 const {
-  extractSpreadsheetId,
-  getSheetIdFromUrl,
-} = require("../helpers/helper");
-const {
   createCopy,
   deleteAllFiles,
   listFiles,
-  downloadPDF,
   convertToPDF,
-  getSheetGid,
   getSheetValues,
   updateCellValues,
 } = require("../controller/google");
@@ -60,13 +54,6 @@ const fetchScore = async (ID) => {
   const formattedData = formatSheetData(data);
   return formattedData;
 };
-const fetchEmbedID = async (ID) => {
-  const sheetName = `Sample chart 1`;
-
-  const data = await getSheetGid(ID, sheetName);
-  // const formattedData = formatSheetData(data);
-  return data;
-};
 
 function formatSheetData(sheetData) {
   const formattedData = {};
@@ -91,23 +78,15 @@ function formatSheetData(sheetData) {
 const storeAnsweresInSheet = async (ID, values, level) => {
   await updateCellValues(ID, values, level);
 };
-function generateRangeAndColumn(level, questionLength) {
-  if (level >= 1 && level <= 26) {
-    const column = String.fromCharCode(64 + (level + 1)); // A=1, B=2, ..., Z=26
-    return column;
-  } else {
-    throw new Error("Invalid level");
-  }
-}
+
 async function getPDF(id, name) {
   await convertToPDF(
     "1zjHBgRgjv3XEFc8WAX6dTRaKBOgoCUw0CBBJmR_hTa4",
     "tdsdest.pdf",
   );
 }
-async function downloadSheet(id) {
-  const pdfFileId = "1Tr_WuLvRsOES7th--bRe1CfNsdZDwcXO"; // Replace with your PDF file ID
-  await downloadPDF(pdfFileId);
+async function deleteAllPDF() {
+  await deleteAllFiles();
 }
 
 const createCopySheet = async (id, name) => {
@@ -119,7 +98,6 @@ module.exports = {
   createCopySheet,
   storeAnsweresInSheet,
   fetchScore,
-  fetchEmbedID,
   getPDF,
-  downloadSheet,
+  deleteAllPDF,
 };

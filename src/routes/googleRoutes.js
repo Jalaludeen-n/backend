@@ -1,9 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
-const multer = require("multer");
-
-const { test, getPDF, downloadSheet } = require("../components/googleSheets");
+const { getPDF } = require("../components/googleSheets");
+const { deleteAllFiles } = require("../controller/google");
 
 router.get("/qustions", async (req, res) => {
   try {
@@ -13,18 +12,18 @@ router.get("/qustions", async (req, res) => {
     res.status(500).json({ error: "An error occurred" });
   }
 });
-router.get("/pdf", async (req, res) => {
+router.get("/download", async (req, res) => {
   try {
-    await getPDF("ds", "ds");
+    await getPDF("test", "test");
     res.status(200).json({ data: {}, message: "data fetched successully" });
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "An error occurred" });
   }
 });
-router.get("/download", async (req, res) => {
+router.get("/deleteAll", async (req, res) => {
   try {
-    await downloadSheet("ds");
+    await deleteAllFiles();
     res.status(200).json({ data: {}, message: "data fetched successully" });
   } catch (error) {
     console.error("Error:", error);
