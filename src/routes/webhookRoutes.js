@@ -5,6 +5,45 @@ const apiKey = process.env.AIRTABLE_API_KEY;
 const baseId = process.env.BASE_ID;
 const notificationUrl = process.env.NOTIFICATION_URL;
 
+router.get("/level-webhook", async (req, res) => {
+  try {
+    const webhookConfig = {
+      notificationUrl: `https://tommorrow.onrender.com/levelWebhook`, // Replace with your backend webhook URL
+      specification: {
+        options: {
+          filters: {
+            dataTypes: ["tableData"], // Trigger on changes to record data
+            recordChangeScope: "tblIU2660HVTjaNpE", // Replace with your Airtable table ID
+            watchDataInFieldIds: ["fldVKvJF2wDDyRYO2"], // Replace with your EmailID field ID
+          },
+          includes: {
+            includeCellValuesInFieldIds: "all", // Include cell values in this field
+            includePreviousCellValues: true,
+            includePreviousFieldDefinitions: true,
+          },
+        },
+      },
+    };
+
+    const response = await axios.post(
+      `https://api.airtable.com/v0/bases/${baseId}/webhooks`,
+      webhookConfig,
+      {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    console.log("Webhook created: for level", response.data);
+    res.status(200).json({ message: "Webhook created successfully" });
+  } catch (error) {
+    console.error("Error creating webhook:", error.response);
+    res.status(500).json({ error: "Error creating webhook" });
+  }
+});
+
 router.get("/create-webhook", async (req, res) => {
   try {
     const webhookConfig = {
