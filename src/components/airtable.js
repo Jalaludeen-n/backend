@@ -551,7 +551,7 @@ const storeAnsweres = async (data) => {
     );
     const level = parseInt(participandResponse[0].fields.CurrentLevel);
     let tempLevel;
-    if (data.numberOfRounds >= level) {
+    if (data.numberOfRounds >= level + 1) {
       tempLevel = level + 1;
     } else {
       tempLevel = "Completed";
