@@ -550,10 +550,16 @@ const storeAnsweres = async (data) => {
       filed,
     );
     const level = parseInt(participandResponse[0].fields.CurrentLevel);
+    let tempLevel;
+    if (data.numberOfRounds >= level) {
+      tempLevel = level + 1;
+    } else {
+      tempLevel = "Completed";
+    }
 
     const formatted = formatAndReturnUpdatedData(
       participandResponse,
-      level + 1,
+      tempLevel,
     );
     if (subbmisionType == "Each member does  their own subbmision") {
       let filed = ["GoogleSheetID"];

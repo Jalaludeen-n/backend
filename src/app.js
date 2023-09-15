@@ -43,7 +43,7 @@ app.post("/webhook", async (req, res) => {
         const { GameID, RoomNumber, GroupName } = ids;
         if (isNewUserAdded(lastChangedRecord)) {
         } else if (isRoleAdded(lastChangedRecord)) {
-          wss.sockets.emit("participants", "ds");
+          wss.sockets.emit("participants", "test");
         } else if (isLevelUpdated(lastChangedRecord)) {
           const level =
             lastChangedRecord.current.cellValuesByFieldId.fldo6NqQFxe3QsAGT;
@@ -54,6 +54,14 @@ app.post("/webhook", async (req, res) => {
         console.log("IDs not available");
       }
     }
+  } catch (error) {
+    console.error("Error processing webhook:", error);
+  }
+  res.status(200).end();
+});
+app.post("/levelWebhook", async (req, res) => {
+  try {
+    wss.sockets.emit("start", "started");
   } catch (error) {
     console.error("Error processing webhook:", error);
   }
