@@ -39,10 +39,8 @@ const getChart = async (name, pageNumber) => {
 
   try {
     const pdfData = await readFileAsync(pdfFilePath);
-
     const pdfDoc = await PDFDocument.load(pdfData);
 
-    // Check if the requested page number is valid
     if (pageNumber < 1 || pageNumber > pdfDoc.getPageCount()) {
       throw new Error("Invalid page number");
     }
@@ -57,6 +55,13 @@ const getChart = async (name, pageNumber) => {
     return base64Page;
   } catch (err) {
     console.error("Error reading or processing PDF file:", err);
+
+    if (err instanceof PDFLib.PDFInvalidObjectError) {
+      console.error(
+        "This is a PDFLib.PDFInvalidObjectError, which may be caused by malformed PDF data.",
+      );
+    }
+
     throw err;
   }
 };

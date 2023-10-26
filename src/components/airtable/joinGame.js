@@ -153,7 +153,7 @@ const joinGame = async (data) => {
 };
 
 const handleResultsSubmission = async (fields, data) => {
-  if (fields.ResultsSubmission === "Each member does  their own subbmision") {
+  if (fields.ResultsSubmission === "Each member does  their own submission") {
     const sheetName = `${data.group}_${data.name}`;
     const sheetID = extractSpreadsheetId(fields.GoogleSheet);
     const copySheetLink = await createCopySheet(sheetID, sheetName);

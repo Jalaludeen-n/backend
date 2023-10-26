@@ -169,7 +169,7 @@ const fetchParticipantDetails = async (data) => {
 
 const fetchLevelDetails = async (data) => {
   try {
-    let subbmisionType = data.ResultsSubmission;
+    let submissionType = data.ResultsSubmission;
     let submit = true;
     let filed = ["CurrentLevel", "Role", "ParticipantEmail"];
     let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
@@ -198,7 +198,7 @@ const fetchLevelDetails = async (data) => {
 
     let sheetID;
 
-    if (subbmisionType == "Each member does  their own subbmision") {
+    if (submissionType == "Each member does  their own submission") {
       let filed = ["GoogleSheetID"];
       let condition = `AND({ParticipantEmail} = "${data.email}",{RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
       let response = await fetchWithCondition(
@@ -208,14 +208,14 @@ const fetchLevelDetails = async (data) => {
       );
       sheetID = response[0].fields.GoogleSheetID;
     } else if (
-      subbmisionType == "Each group member can submit  group answer" ||
-      subbmisionType == "Only one peson can submit group answer"
+      submissionType == "Each group member can submit  group answer" ||
+      submissionType == "Only one peson can submit group answer"
     ) {
       let filed = ["GoogleSheetID"];
       let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
       let response = await fetchWithCondition("GroupSheet", condition, filed);
       sheetID = response[0].fields.GoogleSheetID;
-      if (subbmisionType == "Only one peson can submit group answer") {
+      if (submissionType == "Only one peson can submit group answer") {
         condition = `AND({GameID} = "${data.gameID}",{Role} = "${role}",{Submit} = 0)`;
         let filed = ["Submit"];
         let response = await fetchWithCondition("Role", condition, filed);
@@ -526,7 +526,7 @@ const storeAnsweres = async (data) => {
     let filed = ["ResultsSubmission", "IndividualInstructionsPerRound"];
     let condition = `{GameID} = "${data.gameID}"`;
     let response = await fetchWithCondition("Games", condition, filed);
-    const subbmisionType = response[0].fields.ResultsSubmission;
+    const submissionType = response[0].fields.ResultsSubmission;
     let sheetID;
     filed = ["CurrentLevel"];
     condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
@@ -547,7 +547,7 @@ const storeAnsweres = async (data) => {
       participandResponse,
       tempLevel,
     );
-    if (subbmisionType == "Each member does  their own subbmision") {
+    if (submissionType == "Each member does  their own submission") {
       let filed = ["GoogleSheetID"];
       let condition = `AND({ParticipantEmail} = "${data.email}",{RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
       let response = await fetchWithCondition(
@@ -558,8 +558,8 @@ const storeAnsweres = async (data) => {
       await updateLevel("Participant", formatted.records);
       sheetID = response[0].fields.GoogleSheetID;
     } else if (
-      subbmisionType == "Each group member can submit  group answer" ||
-      subbmisionType == "Only one peson can submit group answer"
+      submissionType == "Each group member can submit  group answer" ||
+      submissionType == "Only one peson can submit group answer"
     ) {
       let filed = ["GoogleSheetID"];
       let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
@@ -604,9 +604,9 @@ const getScore = async (data) => {
     let filed = ["ResultsSubmission"];
     let condition = `{gameID} = "${gameID}"`;
     let response = await fetchWithCondition("Games", condition, filed);
-    const subbmisionType = response[0].fields.ResultsSubmission;
+    const submissionType = response[0].fields.ResultsSubmission;
     let sheetID;
-    if (subbmisionType == "Each member does  their own subbmision") {
+    if (submissionType == "Each member does  their own submission") {
       let filed = ["GoogleSheetID"];
       let condition = `AND({ParticipantEmail} = "${email}",{RoomNumber} = "${roomNumber}",{GroupName} = "${groupName}")`;
       let response = await fetchWithCondition(
@@ -616,8 +616,8 @@ const getScore = async (data) => {
       );
       sheetID = response[0].fields.GoogleSheetID;
     } else if (
-      subbmisionType == "Each group member can submit  group answer" ||
-      subbmisionType == "Only one peson can submit group answer"
+      submissionType == "Each group member can submit  group answer" ||
+      submissionType == "Only one peson can submit group answer"
     ) {
       let filed = ["GoogleSheetID"];
       let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
@@ -631,7 +631,18 @@ const getScore = async (data) => {
     const scoreName = `${sheetID}.pdf`;
     const path = `fullSheets/${scoreName}`;
     const isPathExist = await checkFileExists(path);
-    await convertToPDF(sheetID, "chart 2", scoreName);
+    checkFileExists(path)
+      .then((fileExists) => {
+        if (fileExists) {
+          console.log(`File ${fileName} exists in the folder.`);
+        } else {
+          console.log(`File ${fileName} does not exist in the folder.`);
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+    // await convertToPDF(sheetID, scoreName);
 
     const { PDFscore, type } = await formatDataForLevel(levelScore, scoreName);
 
