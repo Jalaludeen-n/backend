@@ -33,7 +33,7 @@ const fetchAndProcessPayloads = async (webhookId) => {
 };
 
 const isNewUserAdded = (lastChangedRecord) => {
-  const emailFieldId = "fldg4q0xq2QsofmHf";
+  const emailFieldId = "fldtvtie9DpSEf2Fg";
   return (
     lastChangedRecord.current.cellValuesByFieldId[emailFieldId] &&
     lastChangedRecord.previous.cellValuesByFieldId[emailFieldId] !==
@@ -42,7 +42,7 @@ const isNewUserAdded = (lastChangedRecord) => {
 };
 
 const isRoleAdded = (lastChangedRecord) => {
-  const roleFieldId = "fldRzre0LCkn53U3f";
+  const roleFieldId = "fldTaQFHchDD5DstL";
   return (
     lastChangedRecord.current.cellValuesByFieldId[roleFieldId] &&
     lastChangedRecord.previous.cellValuesByFieldId[roleFieldId] !==
@@ -51,7 +51,7 @@ const isRoleAdded = (lastChangedRecord) => {
 };
 
 const isLevelUpdated = (lastChangedRecord) => {
-  const levelFieldId = "fldo6NqQFxe3QsAGT";
+  const levelFieldId = "fld1ghCkCQ5Oll7kg";
   return (
     lastChangedRecord.current.cellValuesByFieldId[levelFieldId] &&
     lastChangedRecord.previous.cellValuesByFieldId[levelFieldId] !==
@@ -61,11 +61,11 @@ const isLevelUpdated = (lastChangedRecord) => {
 
 const getIDs = (lastChangedRecord) => {
   const GroupName =
-    lastChangedRecord.unchanged.cellValuesByFieldId.fldN6N6X6a5ZTtJU9;
+    lastChangedRecord.unchanged.cellValuesByFieldId.fld88tu3iErshi5Sk;
   const GameID =
-    lastChangedRecord.unchanged.cellValuesByFieldId.fldKjdwBkA9HX2d85;
+    lastChangedRecord.unchanged.cellValuesByFieldId.fldeV1edgsVzgvm6T;
   const RoomNumber =
-    lastChangedRecord.unchanged.cellValuesByFieldId.fldcpTI7KR7fZN1Kk;
+    lastChangedRecord.unchanged.cellValuesByFieldId.fldsx8MjZTyo2kHPQ;
 
   return { GroupName, GameID, RoomNumber };
 };

@@ -36,7 +36,7 @@ app.post("/webhook", async (req, res) => {
     console.log("Received webhook:");
     const webhookId = req.body.webhook.id;
     const webhookDetails = await fetchAndProcessPayloads(webhookId);
-    if (webhookDetails.changedTablesById.tblIDHrce5wFKeOya.changedRecordsById) {
+    if (webhookDetails.changedTablesById.tblV3jiz53Pnokoa4.changedRecordsById) {
       const lastChangedRecord = findLastChangedRecord(webhookDetails);
       const ids = getIDs(lastChangedRecord);
       if (ids) {
@@ -46,7 +46,7 @@ app.post("/webhook", async (req, res) => {
           wss.sockets.emit("participants", "test");
         } else if (isLevelUpdated(lastChangedRecord)) {
           const level =
-            lastChangedRecord.current.cellValuesByFieldId.fldo6NqQFxe3QsAGT;
+            lastChangedRecord.current.cellValuesByFieldId.fld1ghCkCQ5Oll7kg;
           await updateAllUserRounds(GameID, RoomNumber, GroupName, level);
           wss.sockets.emit("level", level);
         }

@@ -12,9 +12,9 @@ router.get("/level-webhook", async (req, res) => {
       specification: {
         options: {
           filters: {
-            dataTypes: ["tableData"], // Trigger on changes to record data
-            recordChangeScope: "tblIU2660HVTjaNpE", // Replace with your Airtable table ID
-            watchDataInFieldIds: ["fldVKvJF2wDDyRYO2"], // Replace with your EmailID field ID
+            dataTypes: ["tableData"],
+            recordChangeScope: "tbladv3gmGeBKI340",
+            watchDataInFieldIds: ["fldhEW2GMdJvhwkxr"],
           },
           includes: {
             includeCellValuesInFieldIds: "all", // Include cell values in this field
@@ -52,11 +52,11 @@ router.get("/create-webhook", async (req, res) => {
         options: {
           filters: {
             dataTypes: ["tableData"], // Trigger on changes to record data
-            recordChangeScope: "tblIDHrce5wFKeOya", // Replace with your Airtable table ID
+            recordChangeScope: "tblV3jiz53Pnokoa4", // Replace with your Airtable table ID
             watchDataInFieldIds: [
-              "fldg4q0xq2QsofmHf",
-              "fldRzre0LCkn53U3f",
-              "fldo6NqQFxe3QsAGT",
+              "fldtvtie9DpSEf2Fg",
+              "fldTaQFHchDD5DstL",
+              "fld1ghCkCQ5Oll7kg",
             ], // Replace with your EmailID field ID
           },
           includes: {
