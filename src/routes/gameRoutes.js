@@ -23,6 +23,7 @@ const {
 const { joinGame } = require("./../components/airtable/joinGame");
 
 const { fetchGameData } = require("../controller/airtable");
+const { sendEmailWithPDF } = require("../components/mail/send");
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -33,6 +34,15 @@ router.post("/join", async (req, res) => {
     const result = await joinGame(JSON.parse(req.body.data));
     res.header("Content-Type", "application/json");
     res.status(200).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
+router.get("/mail", async (req, res) => {
+  try {
+    const data = sendEmailWithPDF("Jalaludeen.n@yahoo.com", "deen", "d");
+    res.status(200);
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "An error occurred" });

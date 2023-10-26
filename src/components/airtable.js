@@ -4,10 +4,8 @@ const {
   updateGameInitiatedRecord,
   updateLevel,
 } = require("../controller/airtable");
-const fs = require("fs").promises; // Use fs.promises for async/await support
-const { readFileSync } = require("fs");
-const pdf = require("pdf-parse");
-const { PDFDocument, rgb } = require("pdf-lib");
+const fs = require("fs");
+const path = require("path");
 
 const {
   parseAndFormatGameData,
@@ -630,19 +628,12 @@ const getScore = async (data) => {
     const levelScore = score[`Level ${level}`];
     const scoreName = `${sheetID}.pdf`;
     const path = `fullSheets/${scoreName}`;
-    const isPathExist = await checkFileExists(path);
-    checkFileExists(path)
-      .then((fileExists) => {
-        if (fileExists) {
-          console.log(`File ${fileName} exists in the folder.`);
-        } else {
-          console.log(`File ${fileName} does not exist in the folder.`);
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
-    // await convertToPDF(sheetID, scoreName);
+    const srcDirectory = "src";
+    const fullPath = path.join(srcDirectory, path);
+
+    if (!fs.existsSync(fullPath)) {
+      await convertToPDF(sheetID, scoreName);
+    }
 
     const { PDFscore, type } = await formatDataForLevel(levelScore, scoreName);
 
@@ -658,14 +649,7 @@ const getScore = async (data) => {
     throw error;
   }
 };
-async function checkFileExists(filePath) {
-  try {
-    await fs.access(filePath, fs.constants.F_OK);
-    return true; // The file exists
-  } catch (error) {
-    return false; // The file does not exist
-  }
-}
+
 async function formatDataForLevel(data, scoreName) {
   let type;
   let PDFscore;
