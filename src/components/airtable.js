@@ -111,7 +111,7 @@ const fetchParticipantDetails = async (data) => {
         "GameName",
         "Instruction",
         "GameID",
-        "ResultsSubbmision",
+        "ResultsSubmission",
         "ScoreVisibilityForPlayers",
       ];
       condition = `{GameID} = "${GameID}"`;
@@ -127,7 +127,7 @@ const fetchParticipantDetails = async (data) => {
           "GameName",
           "Instruction",
           "GameID",
-          "ResultsSubbmision",
+          "ResultsSubmission",
           "ScoreVisibilityForPlayers",
         ];
         response = await fetchWithCondition("Games", condition, filed);
@@ -150,7 +150,7 @@ const fetchParticipantDetails = async (data) => {
       email: data.email,
       roomNumber: data.roomNumber,
       gameID: response[0].fields.GameID,
-      resultsSubbmision: response[0].fields.ResultsSubbmision,
+      resultsSubbmision: response[0].fields.ResultsSubmission,
       scoreVisibilityForPlayers: response[0].fields.ScoreVisibilityForPlayers,
       pdf: gameInstruction,
     };
@@ -169,7 +169,7 @@ const fetchParticipantDetails = async (data) => {
 
 const fetchLevelDetails = async (data) => {
   try {
-    let subbmisionType = data.resultsSubbmision;
+    let subbmisionType = data.ResultsSubmission;
     let submit = true;
     let filed = ["CurrentLevel", "Role", "ParticipantEmail"];
     let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
@@ -183,15 +183,19 @@ const fetchLevelDetails = async (data) => {
     );
 
     const role = matchingRecord ? matchingRecord.fields.Role : null;
-    let CurrentLevel;
-    if (data.numberOfRounds >= data.level) {
-      CurrentLevel = data.level.toString();
-    } else {
-      CurrentLevel = "Completed";
+
+    if (data.level == 1) {
+      let CurrentLevel = data.level.toString();
+      const formattedData = {
+        CurrentLevel,
+      };
+      await updateGameInitiatedRecord(
+        "Participant",
+        response[0].id,
+        formattedData,
+      );
     }
-    const formattedData = {
-      CurrentLevel,
-    };
+
     let sheetID;
 
     if (subbmisionType == "Each member does  their own subbmision") {
@@ -210,15 +214,6 @@ const fetchLevelDetails = async (data) => {
       let filed = ["GoogleSheetID"];
       let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
       let response = await fetchWithCondition("GroupSheet", condition, filed);
-      let formattedData = updateCurrentLevels(response, data.level);
-      for (const record of formattedData) {
-        await updateGameInitiatedRecord(
-          "Participant",
-          record.id,
-          record.fields,
-        );
-      }
-
       sheetID = response[0].fields.GoogleSheetID;
       if (subbmisionType == "Only one peson can submit group answer") {
         condition = `AND({GameID} = "${data.gameID}",{Role} = "${role}",{Submit} = 0)`;
@@ -232,7 +227,6 @@ const fetchLevelDetails = async (data) => {
 
     const qustions = await fetchQustions(sheetID, data.level);
     let fileName;
-
     if (gamesResponse) {
       fileName = `${data.gameName}_${role}_Level${data.level}.pdf`;
     } else {
@@ -240,12 +234,6 @@ const fetchLevelDetails = async (data) => {
     }
 
     const levelInstruction = await getFile(fileName);
-
-    await updateGameInitiatedRecord(
-      "Participant",
-      response[0].id,
-      formattedData,
-    );
 
     const responseData = {
       qustions: qustions,
@@ -535,15 +523,13 @@ function filterAndCondition(response, emailId, roomNumber) {
 }
 const storeAnsweres = async (data) => {
   try {
-    const resultsSubbmision = data.resultsSubbmision;
-    // if (typeof resultsSubbmision === "undefined") {
-    let filed = ["ResultsSubbmision", "IndividualInstructionsPerRound"];
+    let filed = ["ResultsSubmission", "IndividualInstructionsPerRound"];
     let condition = `{GameID} = "${data.gameID}"`;
     let response = await fetchWithCondition("Games", condition, filed);
-    const subbmisionType = response[0].fields.ResultsSubbmision;
+    const subbmisionType = response[0].fields.ResultsSubmission;
     let sheetID;
     filed = ["CurrentLevel"];
-    condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}",{ParticipantEmail} = "${data.email}")`;
+    condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
     let participandResponse = await fetchWithCondition(
       "Participant",
       condition,
@@ -578,7 +564,14 @@ const storeAnsweres = async (data) => {
       let filed = ["GoogleSheetID"];
       let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
       let response = await fetchWithCondition("GroupSheet", condition, filed);
-      await updateLevel("Participant", formatted.records);
+      let formattedData = updateCurrentLevels(response, data.level);
+      for (const record of formattedData) {
+        await updateGameInitiatedRecord(
+          "Participant",
+          record.id,
+          record.fields,
+        );
+      }
 
       sheetID = response[0].fields.GoogleSheetID;
     }
@@ -608,10 +601,10 @@ function extractFieldsForMember(records, fieldNames) {
 const getScore = async (data) => {
   const { groupName, roomNumber, gameID, level, email } = data;
   try {
-    let filed = ["ResultsSubbmision"];
+    let filed = ["ResultsSubmission"];
     let condition = `{gameID} = "${gameID}"`;
     let response = await fetchWithCondition("Games", condition, filed);
-    const subbmisionType = response[0].fields.ResultsSubbmision;
+    const subbmisionType = response[0].fields.ResultsSubmission;
     let sheetID;
     if (subbmisionType == "Each member does  their own subbmision") {
       let filed = ["GoogleSheetID"];
@@ -635,12 +628,12 @@ const getScore = async (data) => {
 
     const score = await fetchScore(sheetID);
     const levelScore = score[`Level ${level}`];
-    const pdfFilePath = `fullSheet/${sheetID}.pdf`;
-
-    await convertToPDF(sheetID, `${sheetID}.pdf`);
-
     const scoreName = `${sheetID}.pdf`;
-    const { PDFscore, type } = await formatDataForGID(levelScore, scoreName);
+    const path = `fullSheets/${scoreName}`;
+    const isPathExist = await checkFileExists(path);
+    await convertToPDF(sheetID, "chart 2", scoreName);
+
+    const { PDFscore, type } = await formatDataForLevel(levelScore, scoreName);
 
     return {
       success: true,
@@ -662,7 +655,7 @@ async function checkFileExists(filePath) {
     return false; // The file does not exist
   }
 }
-async function formatDataForGID(data, scoreName) {
+async function formatDataForLevel(data, scoreName) {
   let type;
   let PDFscore;
   if ("Chart" in data) {

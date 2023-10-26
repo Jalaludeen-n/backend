@@ -80,7 +80,7 @@ const joinGame = async (data) => {
 
     const {
       RolesAutoSelection,
-      ResultsSubbmision,
+      ResultsSubmission,
       GoogleSheet,
       GameName,
       NumberOfRounds,
@@ -122,7 +122,7 @@ const joinGame = async (data) => {
 
       responseData = {
         RolesAutoSelection,
-        ResultsSubbmision,
+        ResultsSubmission,
         GoogleSheetID,
         GameName,
         NumberOfRounds,
@@ -153,7 +153,7 @@ const joinGame = async (data) => {
 };
 
 const handleResultsSubmission = async (fields, data) => {
-  if (fields.ResultsSubbmision === "Each member does  their own subbmision") {
+  if (fields.ResultsSubmission === "Each member does  their own subbmision") {
     const sheetName = `${data.group}_${data.name}`;
     const sheetID = extractSpreadsheetId(fields.GoogleSheet);
     const copySheetLink = await createCopySheet(sheetID, sheetName);
@@ -165,8 +165,8 @@ const handleResultsSubmission = async (fields, data) => {
     );
     return copySheetLink;
   } else if (
-    fields.ResultsSubbmision === "Each group member can submit  group answer" ||
-    fields.ResultsSubbmision === "Only one peson can submit group answer"
+    fields.ResultsSubmission === "Each group member can submit  group answer" ||
+    fields.ResultsSubmission === "Only one peson can submit group answer"
   ) {
     const groupSheetResponse = await fetchGroupSheetResponse(
       data.roomNumber,

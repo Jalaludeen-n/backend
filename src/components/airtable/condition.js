@@ -4,11 +4,11 @@ const fetchRolesAutoSelection = async (GameID) => {
   const condition = `{GameID} = "${GameID}"`;
   const fields = [
     "RolesAutoSelection",
-    "ResultsSubbmision",
+    "ResultsSubmission",
     "GoogleSheet",
     "GameName",
     "NumberOfRounds",
-    "ResultsSubbmision",
+    "ResultsSubmission",
     "ScoreVisibilityForPlayers",
     "RolesAutoSelection",
     "IndividualInstructionsPerRound",

@@ -22,7 +22,7 @@ const formatGameData = (data, GameId, instruction) => {
     GameName: data.GameName,
     GoogleSheet: data.GoogleSheet,
     NumberOfRounds: parseInt(data.NumberOfRounds),
-    ResultsSubbmision: data.ResultsSubbmision,
+    ResultsSubmission: data.ResultsSubmission,
     ScoreVisibilityForPlayers: data.ScoreVisibility,
     RolesAutoSelection: data.RoleSelection,
     IndividualInstructionsPerRound: data.IndividualInstructions,

@@ -18,7 +18,7 @@ const FIELDS = {
     GoogleSheet: "GoogleSheet",
     NumberOfRounds: "NumberOfRounds",
     ScoreVisibilityForPlayers: "ScoreVisibilityForPlayers",
-    ResultsSubbmision: "ResultsSubbmision",
+    ResultsSubmission: "ResultsSubmission",
     RolesAutoSelection: "RolesAutoSelection",
     IndividualInstructionsPerRound: "IndividualInstructionsPerRound",
     Instruction: "Instruction",
