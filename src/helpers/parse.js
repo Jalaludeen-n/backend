@@ -24,7 +24,7 @@ const formatGameData = (data, GameId, instruction) => {
     NumberOfRounds: parseInt(data.NumberOfRounds),
     ResultsSubmission: data.resultsSubmission,
     ScoreVisibilityForPlayers: data.ScoreVisibility,
-    RolesAutoSelection: data.RoleSelection,
+    RolesAutoSelection: !data.RoleSelection,
     IndividualInstructionsPerRound: data.IndividualInstructions,
     Instruction: instruction,
     Date: getDate(),

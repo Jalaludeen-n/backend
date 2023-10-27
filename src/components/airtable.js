@@ -627,11 +627,11 @@ const getScore = async (data) => {
     const score = await fetchScore(sheetID);
     const levelScore = score[`Level ${level}`];
     const scoreName = `${sheetID}.pdf`;
-    const path = `fullSheets/${scoreName}`;
+    const filepath = `fullSheet/${scoreName}`;
     const srcDirectory = "src";
-    const fullPath = path.join(srcDirectory, path);
+    const fullPath = path.join(srcDirectory, filepath);
 
-    if (!fs.existsSync(fullPath)) {
+    if (!fs.existsSync(filepath)) {
       await convertToPDF(sheetID, scoreName);
     }
 
