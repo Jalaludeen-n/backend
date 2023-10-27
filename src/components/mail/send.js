@@ -1,7 +1,7 @@
 const sgMail = require("@sendgrid/mail");
-sgMail.setApiKey(
-  "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",
-);
+const KEY = process.env.MAIL_KEY;
+
+sgMail.setApiKey(KEY);
 
 function sendEmailWithPDF(recipient, Name, pdfURL) {
   const msg = {
