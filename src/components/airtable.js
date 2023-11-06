@@ -510,11 +510,11 @@ function filterAndCondition(response, emailId, roomNumber) {
     }
 
     const filteredData = response
-      .filter(
-        (item) =>
-          item.fields.ParticipantEmail !== emailId &&
-          item.fields.RoomNumber !== roomNumber,
-      )
+      // .filter(
+      //   (item) =>
+      //     item.fields.ParticipantEmail !== emailId &&
+      //     item.fields.RoomNumber !== roomNumber,
+      // )
       .map((item) => ({
         Role: item.fields.Role || "Not Selected",
         Name: item.fields.Name,
