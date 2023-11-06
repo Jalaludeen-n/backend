@@ -504,21 +504,31 @@ const fetchParticipants = async (data) => {
 };
 
 function filterAndCondition(response, emailId, roomNumber) {
-  const filteredData = response
-    .filter(
-      (item) =>
-        item.fields.ParticipantEmail !== emailId &&
-        item.fields.RoomNumber !== roomNumber,
-    )
-    .map((item) => ({
-      Role: item.fields.Role || "Not Selected",
-      Name: item.fields.Name,
-      ParticipantEmail: item.fields.ParticipantEmail,
-      GameID: item.fields.GameID,
-    }));
+  try {
+    if (!Array.isArray(response)) {
+      throw new Error("Response data is not an array.");
+    }
 
-  return filteredData;
+    const filteredData = response
+      .filter(
+        (item) =>
+          item.fields.ParticipantEmail !== emailId &&
+          item.fields.RoomNumber !== roomNumber,
+      )
+      .map((item) => ({
+        Role: item.fields.Role || "Not Selected",
+        Name: item.fields.Name,
+        ParticipantEmail: item.fields.ParticipantEmail,
+        GameID: item.fields.GameID,
+      }));
+
+    return filteredData;
+  } catch (error) {
+    console.error("Error in filterAndCondition:", error);
+    return error.message;
+  }
 }
+
 const storeAnsweres = async (data) => {
   try {
     let filed = ["ResultsSubmission", "IndividualInstructionsPerRound"];
