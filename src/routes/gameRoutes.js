@@ -161,7 +161,6 @@ router.post("/over", async (req, res) => {
 });
 router.post("/players", async (req, res) => {
   try {
-    
     checkRequestBodyAndDataField(req, res);
     const parsedValue = JSON.parse(req.body.data);
     const data = await fetchParticipants(parsedValue);
@@ -183,10 +182,10 @@ router.post("/groups", async (req, res) => {
   }
 });
 
-router.post("/roles", async (req, res) => {
+router.get("/roles", async (req, res) => {
   try {
-    checkRequestBodyAndDataField(req, res);
-    const data = await getRoles(req.body.data);
+    const queryData = req.query;
+    const data = await getRoles(queryData);
     res.status(200).json(data);
   } catch (error) {
     console.error("Error:", error);
