@@ -75,20 +75,35 @@ const createGame = async (pdf, data, roles) => {
   try {
     const uniqueCode = generateUniqueCode(7);
     const gameData = parseAndFormatGameData(data, uniqueCode, pdf);
-    let levelData;
-    if (!gameData.IndividualInstructionsPerRound) {
-      levelData = parseAndFormatLevel(roles, pdf, gameData);
-    } else {
-      levelData = parseAndFormatLevelData(roles, pdf, gameData);
-    }
-    const roleData = parseAndFormatRoleData(roles, uniqueCode, pdf);
+
+    const levelData = parseAndFormatLevel(roles, pdf, gameData);
+
+    const roleData = parseAndFormatRoleData(
+      roles,
+      uniqueCode,
+      pdf,
+      gameData.GameName,
+    );
 
     await createRecord(gameData, "Games");
-    await createRecord(roleData, "Role");
-    await createRecord(levelData, "Instructions");
+    createRecordsInBatches(roleData, "Role");
+    createRecordsInBatches(levelData, "Instructions");
   } catch (error) {
     console.error("Error creating game:", error);
   }
+};
+const createRecordsInBatches = async (levelData, table) => {
+  const batchSize = 10;
+  const totalRecords = levelData.length;
+
+  for (let i = 0; i < totalRecords; i += batchSize) {
+    const batch = levelData.slice(i, i + batchSize);
+    await createRecords(batch, table);
+  }
+};
+
+const createRecords = async (data, table) => {
+  await createRecord(data, table);
 };
 
 const fetchParticipantDetails = async (data) => {
