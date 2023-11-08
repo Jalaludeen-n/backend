@@ -330,6 +330,34 @@ const getRoles = async (data) => {
     throw error;
   }
 };
+const getRolePdf = async (data) => {
+  try {
+    const fileName = `Role_${data.GameName}_${data.role}.pdf`;
+    const gameInstruction = await getFile(fileName);
+    return {
+      success: true,
+      data: gameInstruction,
+      message: "PDF Fetched",
+    };
+  } catch (error) {
+    console.error("Error getting roles", error);
+    throw error;
+  }
+};
+const getRoundPdf = async (data) => {
+  try {
+    const fileName = `${data.GameName}_Level${data.role}.pdf`;
+    const gameInstruction = await getFile(fileName);
+    return {
+      success: true,
+      data: gameInstruction,
+      message: "PDF Fetched",
+    };
+  } catch (error) {
+    console.error("Error getting roles", error);
+    throw error;
+  }
+};
 const selectRole = async (data) => {
   try {
     assignRoleManually(data.groupName, data.email, data.role, data.roomNumber);
@@ -806,4 +834,6 @@ module.exports = {
   getMember,
   getLevelStatus,
   startLevel,
+  getRolePdf,
+  getRoundPdf,
 };
