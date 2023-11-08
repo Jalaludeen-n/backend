@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const http = require("http");
 const gameRoutes = require("./routes/gameRoutes");
+const levelRoutes = require("./routes/levelRoutes");
 const webhookRoutes = require("./routes/webhookRoutes");
 const google = require("./routes/googleRoutes");
 const origin = process.env.ORIGIN;
@@ -30,6 +31,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/game", gameRoutes);
+app.use("/level", levelRoutes);
 app.use("/google", google);
 app.use("/webhooks", webhookRoutes);
 app.post("/webhook", async (req, res) => {

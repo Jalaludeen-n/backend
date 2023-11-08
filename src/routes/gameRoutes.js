@@ -18,6 +18,8 @@ const {
   gameCompleted,
   getScore,
   getMember,
+  getRolePdf,
+  getRoundPdf,
 } = require("../components/airtable");
 
 const { joinGame } = require("./../components/airtable/joinGame");
@@ -70,26 +72,26 @@ router.post("/start", async (req, res) => {
     res.status(500).json({ error: "An error occurred" });
   }
 });
-router.post("/startLevel", async (req, res) => {
-  try {
-    checkRequestBodyAndDataField(req, res);
-    startLevel(JSON.parse(req.body.data));
-    res.status(200).json({ message: "Game Started successfully" });
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ error: "An error occurred" });
-  }
-});
-router.post("/levelStatus", async (req, res) => {
-  try {
-    checkRequestBodyAndDataField(req, res);
-    const data = await getLevelStatus(JSON.parse(req.body.data));
-    res.status(200).json(data);
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ error: "An error occurred" });
-  }
-});
+// router.post("/startLevel", async (req, res) => {
+//   try {
+//     checkRequestBodyAndDataField(req, res);
+//     startLevel(JSON.parse(req.body.data));
+//     res.status(200).json({ message: "Game Started successfully" });
+//   } catch (error) {
+//     console.error("Error:", error);
+//     res.status(500).json({ error: "An error occurred" });
+//   }
+// });
+// router.post("/levelStatus", async (req, res) => {
+//   try {
+//     checkRequestBodyAndDataField(req, res);
+//     const data = await getLevelStatus(JSON.parse(req.body.data));
+//     res.status(200).json(data);
+//   } catch (error) {
+//     console.error("Error:", error);
+//     res.status(500).json({ error: "An error occurred" });
+//   }
+// });
 
 router.get("/running", async (req, res) => {
   try {
@@ -170,10 +172,9 @@ router.post("/players", async (req, res) => {
     res.status(500).json({ error: "An error occurred" });
   }
 });
-router.post("/groups", async (req, res) => {
+router.get("/groups", async (req, res) => {
   try {
-    checkRequestBodyAndDataField(req, res);
-    const parsedValue = JSON.parse(req.body.data);
+    const parsedValue = req.query;
     const data = await fetchGroupDetails(parsedValue);
     res.status(200).json(data);
   } catch (error) {
@@ -192,6 +193,51 @@ router.get("/roles", async (req, res) => {
     res.status(500).json({ error: "An error occurred" });
   }
 });
+router.get("/rolePdf", async (req, res) => {
+  try {
+    const queryData = req.query;
+    const data = await getRolePdf(queryData);
+    res.header("Content-Type", "application/json");
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
+// router.get("/levelStatus", async (req, res) => {
+//   try {
+//     const queryData = req.query;
+//     const data = await getRolePdf(queryData);
+//     res.header("Content-Type", "application/json");
+//     res.status(200).json(data);
+//   } catch (error) {
+//     console.error("Error:", error);
+//     res.status(500).json({ error: "An error occurred" });
+//   }
+// });
+// router.post("/levelUpdate", async (req, res) => {
+//   try {
+//     checkRequestBodyAndDataField(req, res);
+//     const data = await getScore(JSON.parse(req.body.data));
+//     res.header("Content-Type", "application/json");
+//     res.status(200).json(data);
+//   } catch (error) {
+//     console.error("Error:", error);
+//     res.status(500).json({ error: "An error occurred" });
+//   }
+// });
+
+// router.get("/roundPdf", async (req, res) => {
+//   try {
+//     const queryData = req.query;
+//     const data = await getRoundPdf(queryData);
+//     res.header("Content-Type", "application/json");
+//     res.status(200).json(data);
+//   } catch (error) {
+//     console.error("Error:", error);
+//     res.status(500).json({ error: "An error occurred" });
+//   }
+// });
 router.post("/score", async (req, res) => {
   try {
     checkRequestBodyAndDataField(req, res);
