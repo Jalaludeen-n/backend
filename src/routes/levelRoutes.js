@@ -1,34 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
 
 const {
-  createGame,
-  startGame,
-  getRunningAndPastGame,
-  getRoles,
-  fetchParticipantDetails,
   getLevelStatus,
   startLevel,
-  fetchGroupDetails,
-  fetchParticipants,
-  selectRole,
-  fetchLevelDetails,
-  storeAnsweres,
-  gameCompleted,
-  getScore,
-  getMember,
-  getRolePdf,
   getRoundPdf,
-} = require("../components/airtable");
-
-const { joinGame } = require("./../components/airtable/joinGame");
-
-const { fetchGameData } = require("../controller/airtable");
-const { sendEmailWithPDF } = require("../components/mail/send");
-
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+  updateRound,
+} = require("../components/level");
 
 router.post("/start", async (req, res) => {
   try {
@@ -52,8 +30,7 @@ router.get("/status", async (req, res) => {
 
 router.patch("/update", async (req, res) => {
   try {
-    checkRequestBodyAndDataField(req, res);
-    const data = await updateLevel(JSON.parse(req.body));
+    const data = await updateRound(JSON.parse(req.body.data));
     res.status(200).json(data);
   } catch (error) {
     console.error("Error:", error);
@@ -61,7 +38,7 @@ router.patch("/update", async (req, res) => {
   }
 });
 
-router.get("/df", async (req, res) => {
+router.get("/pdf", async (req, res) => {
   try {
     const queryData = req.query;
     const data = await getRoundPdf(queryData);
