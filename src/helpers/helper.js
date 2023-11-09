@@ -21,6 +21,15 @@ const storeFile = (pdfArray, name) => {
   }
   return null;
 };
+function extractFieldsForMember(records, fieldNames) {
+  return records.map((record) => {
+    const extractedFields = {};
+    fieldNames.forEach((fieldName) => {
+      extractedFields[fieldName] = record.get(fieldName);
+    });
+    return extractedFields;
+  });
+}
 
 const getFile = async (name) => {
   const pdfFilePath = path.join(__dirname, "../uploads", name);
@@ -118,4 +127,5 @@ module.exports = {
   extractSpreadsheetId,
   getSheetIdFromUrl,
   getChart,
+  extractFieldsForMember,
 };

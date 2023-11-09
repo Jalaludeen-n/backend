@@ -1,4 +1,4 @@
-const { updateAlltheUserRounds } = require("../components/airtable");
+const { updateAlltheUserRounds } = require("../components/level");
 const { fetchPayloads } = require("./../controller/airtable");
 
 const findLastChangedRecord = (webhookDetails) => {
