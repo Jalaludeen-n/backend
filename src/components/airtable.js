@@ -9,11 +9,10 @@ const path = require("path");
 
 const {
   parseAndFormatGameData,
-  parseAndFormatLevelData,
+
   parseAndFormatRoleData,
   parseAndFormatLevel,
   parseGameData,
-  parseLevelData,
 } = require("../helpers/parse");
 const {
   getRemainingRoles,
@@ -23,11 +22,15 @@ const {
   fetchQustions,
   storeAnsweresInSheet,
   fetchScore,
-  fetchEmbedID,
 } = require("../components/googleSheets");
 const { convertToPDF } = require("../controller/google");
 
-const { generateUniqueCode, getFile, getChart } = require("../helpers/helper");
+const {
+  generateUniqueCode,
+  getFile,
+  getChart,
+  extractFieldsForMember,
+} = require("../helpers/helper");
 
 const { fetchRolesAutoSelection } = require("./airtable/condition");
 
@@ -330,34 +333,7 @@ const getRoles = async (data) => {
     throw error;
   }
 };
-const getRolePdf = async (data) => {
-  try {
-    const fileName = `Role_${data.GameName}_${data.role}.pdf`;
-    const gameInstruction = await getFile(fileName);
-    return {
-      success: true,
-      data: gameInstruction,
-      message: "PDF Fetched",
-    };
-  } catch (error) {
-    console.error("Error getting roles", error);
-    throw error;
-  }
-};
-const getRoundPdf = async (data) => {
-  try {
-    const fileName = `${data.GameName}_Level${data.role}.pdf`;
-    const gameInstruction = await getFile(fileName);
-    return {
-      success: true,
-      data: gameInstruction,
-      message: "PDF Fetched",
-    };
-  } catch (error) {
-    console.error("Error getting roles", error);
-    throw error;
-  }
-};
+
 const selectRole = async (data) => {
   try {
     assignRoleManually(data.groupName, data.email, data.role, data.roomNumber);
@@ -639,15 +615,6 @@ const storeAnsweres = async (data) => {
     throw error;
   }
 };
-function extractFieldsForMember(records, fieldNames) {
-  return records.map((record) => {
-    const extractedFields = {};
-    fieldNames.forEach((fieldName) => {
-      extractedFields[fieldName] = record.get(fieldName);
-    });
-    return extractedFields;
-  });
-}
 
 const getScore = async (data) => {
   const { groupName, roomNumber, gameID, level, email } = data;
@@ -740,83 +707,6 @@ const getMember = async (data) => {
   }
 };
 
-const isLevelStarted = (records, level) => {
-  for (const record of records) {
-    if (record.fields && record.fields.Level && record.fields.Status) {
-      if (record.fields.Level === level && record.fields.Status === "Started") {
-        return true;
-      }
-    }
-  }
-  return false;
-};
-const getLevelStatus = async (data) => {
-  const { RoomNumber, GameID, Level } = data;
-  try {
-    let filed = ["Level", "Status"];
-    let condition = `AND({gameID} = "${GameID}",{RoomNumber} = "${RoomNumber}")`;
-    let response = await fetchWithCondition("Level", condition, filed);
-    let extractedData = [{}];
-    if (response) {
-      extractedData = extractFieldsForMember(response, filed);
-    }
-
-    return {
-      success: true,
-      levelStatus: extractedData,
-      message: "Data fetched",
-    };
-  } catch (error) {
-    console.error("Error Fetching member:", error);
-    throw error;
-  }
-};
-
-const startLevel = async (data) => {
-  try {
-    const formattedData = parseLevelData(data);
-    await createRecord(formattedData, "Level");
-
-    return {
-      success: true,
-      message: "Data stored",
-    };
-  } catch (error) {
-    console.error("Error Fetching member:", error);
-    throw error;
-  }
-};
-
-const updateAlltheUserRounds = async (GroupName, GameID, RoomNumber, round) => {
-  try {
-    let filed = ["GameID", "Role", "ParticipantEmail", "Name"];
-    let condition = `AND({GroupName} = "${GroupName}",{GameID} = "${GameID}",{RoomNumber} = "${RoomNumber}")`;
-    let response = await fetchWithCondition("Participant", condition, filed);
-    const formatted = formatAndReturnUpdatedData(response, round);
-
-    await updateLevel("Participant", formatted.records);
-
-    return {
-      success: true,
-      data: {},
-      message: "Data fetched",
-    };
-  } catch (error) {
-    console.error("Error updating all the user round:", error);
-    throw error;
-  }
-};
-const formatAndReturnUpdatedData = (records, level) => {
-  const updatedData = records.map((record) => ({
-    id: record.id,
-    fields: {
-      CurrentLevel: level.toString(),
-    },
-  }));
-
-  return { records: updatedData };
-};
-
 module.exports = {
   startGame,
   createGame,
@@ -828,12 +718,18 @@ module.exports = {
   fetchParticipants,
   fetchLevelDetails,
   storeAnsweres,
-  updateAlltheUserRounds,
   gameCompleted,
   getScore,
   getMember,
-  getLevelStatus,
-  startLevel,
-  getRolePdf,
-  getRoundPdf,
 };
+
+// const isLevelStarted = (records, level) => {
+//   for (const record of records) {
+//     if (record.fields && record.fields.Level && record.fields.Status) {
+//       if (record.fields.Level === level && record.fields.Status === "Started") {
+//         return true;
+//       }
+//     }
+//   }
+//   return false;
+// };
