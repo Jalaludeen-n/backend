@@ -5,6 +5,7 @@ const cors = require("cors");
 const http = require("http");
 const gameRoutes = require("./routes/gameRoutes");
 const levelRoutes = require("./routes/levelRoutes");
+const roleRoutes = require("./routes/roleRoutes");
 const webhookRoutes = require("./routes/webhookRoutes");
 const google = require("./routes/googleRoutes");
 const origin = process.env.ORIGIN;
@@ -23,7 +24,7 @@ const server = http.createServer(app);
 const wss = socketIO(server, {
   cors: {
     origin: origin,
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PATCH"],
   },
 });
 
@@ -32,6 +33,7 @@ app.use(express.json());
 
 app.use("/game", gameRoutes);
 app.use("/level", levelRoutes);
+app.use("/role", roleRoutes);
 app.use("/google", google);
 app.use("/webhooks", webhookRoutes);
 app.post("/webhook", async (req, res) => {
