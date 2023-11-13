@@ -8,6 +8,7 @@ const levelRoutes = require("./routes/levelRoutes");
 const roleRoutes = require("./routes/roleRoutes");
 const webhookRoutes = require("./routes/webhookRoutes");
 const google = require("./routes/googleRoutes");
+const decision = require("./routes/decisionRoutes");
 const origin = process.env.ORIGIN;
 const socketIO = require("socket.io");
 const {
@@ -35,6 +36,7 @@ app.use("/game", gameRoutes);
 app.use("/level", levelRoutes);
 app.use("/role", roleRoutes);
 app.use("/google", google);
+app.use("/decision-form", decision);
 app.use("/webhooks", webhookRoutes);
 app.post("/webhook", async (req, res) => {
   try {
