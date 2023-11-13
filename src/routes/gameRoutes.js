@@ -12,7 +12,6 @@ const {
   fetchGroupDetails,
   fetchParticipants,
   selectRole,
-  fetchLevelDetails,
   storeAnsweres,
   gameCompleted,
   getScore,
@@ -114,18 +113,7 @@ router.post("/answeres", async (req, res) => {
   }
 });
 
-router.post("/level", async (req, res) => {
-  try {
-    checkRequestBodyAndDataField(req, res);
-    const parsedValue = JSON.parse(req.body.data);
-    const data = await fetchLevelDetails(parsedValue);
-    res.header("Content-Type", "application/json");
-    res.status(200).json(data);
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ error: "An error occurred" });
-  }
-});
+
 router.post("/over", async (req, res) => {
   try {
     checkRequestBodyAndDataField(req, res);

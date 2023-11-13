@@ -183,90 +183,6 @@ const fetchParticipantDetails = async (data) => {
   }
 };
 
-const fetchLevelDetails = async (data) => {
-  try {
-    let submissionType = data.ResultsSubmission;
-    let submit = true;
-    let filed = ["CurrentLevel", "Role", "ParticipantEmail"];
-    let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
-
-    let response = await fetchWithCondition("Participant", condition, filed);
-    filed = ["IndividualInstructionsPerRound"];
-    condition = `AND({IndividualInstructionsPerRound} = 1 ,{GameID} = "${data.gameID}")`;
-    let gamesResponse = await fetchWithCondition("Games", condition, filed);
-    const matchingRecord = response.find(
-      (record) => record.fields.ParticipantEmail === data.email,
-    );
-
-    const role = matchingRecord ? matchingRecord.fields.Role : null;
-
-    if (data.level == 1) {
-      let CurrentLevel = data.level.toString();
-      const formattedData = {
-        CurrentLevel,
-      };
-      await updateGameInitiatedRecord(
-        "Participant",
-        response[0].id,
-        formattedData,
-      );
-    }
-
-    let sheetID;
-
-    if (submissionType == "Each member does  their own submission") {
-      let filed = ["GoogleSheetID"];
-      let condition = `AND({ParticipantEmail} = "${data.email}",{RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
-      let response = await fetchWithCondition(
-        "IndividualSheet",
-        condition,
-        filed,
-      );
-      sheetID = response[0].fields.GoogleSheetID;
-    } else if (
-      submissionType == "Each group member can submit  group answer" ||
-      submissionType == "Only one peson can submit group answer"
-    ) {
-      let filed = ["GoogleSheetID"];
-      let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
-      let response = await fetchWithCondition("GroupSheet", condition, filed);
-      sheetID = response[0].fields.GoogleSheetID;
-      if (submissionType == "Only one peson can submit group answer") {
-        condition = `AND({GameID} = "${data.gameID}",{Role} = "${role}",{Submit} = 0)`;
-        let filed = ["Submit"];
-        let response = await fetchWithCondition("Role", condition, filed);
-        if (response) {
-          submit = false;
-        }
-      }
-    }
-
-    const qustions = await fetchQustions(sheetID, data.level);
-    let fileName;
-    if (gamesResponse) {
-      fileName = `${data.gameName}_${role}_Level${data.level}.pdf`;
-    } else {
-      fileName = `${data.gameName}_LevelInstruction.pdf`;
-    }
-
-    const levelInstruction = await getFile(fileName);
-
-    const responseData = {
-      qustions: qustions,
-      instruction: levelInstruction,
-      submit,
-    };
-
-    return {
-      success: true,
-      data: responseData,
-      message: "Data fetched",
-    };
-  } catch (error) {
-    console.error("Error fetching level details", error);
-    throw error;
-  }
-};
 const updateCurrentLevels = (records, newLevel) => {
   return records.map((record) => ({
     id: record.id,
@@ -716,7 +632,6 @@ module.exports = {
   selectRole,
   fetchGroupDetails,
   fetchParticipants,
-  fetchLevelDetails,
   storeAnsweres,
   gameCompleted,
   getScore,
