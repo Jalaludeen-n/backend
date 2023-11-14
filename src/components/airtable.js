@@ -2,7 +2,6 @@ const {
   createRecord,
   fetchWithCondition,
   updateGameInitiatedRecord,
-  updateLevel,
 } = require("../controller/airtable");
 const fs = require("fs");
 const path = require("path");
@@ -18,11 +17,7 @@ const {
   getRemainingRoles,
   assignRoleManually,
 } = require("../components/gameDetails");
-const {
-  fetchQustions,
-  storeAnsweresInSheet,
-  fetchScore,
-} = require("../components/googleSheets");
+const { fetchScore } = require("../components/googleSheets");
 const { convertToPDF } = require("../controller/google");
 
 const {
@@ -464,74 +459,6 @@ function filterAndCondition(response, emailId, roomNumber) {
   }
 }
 
-const storeAnsweres = async (data) => {
-  try {
-    let filed = ["ResultsSubmission", "IndividualInstructionsPerRound"];
-    let condition = `{GameID} = "${data.gameID}"`;
-    let response = await fetchWithCondition("Games", condition, filed);
-    const submissionType = response[0].fields.ResultsSubmission;
-    let sheetID;
-    filed = ["CurrentLevel"];
-    condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
-    let participandResponse = await fetchWithCondition(
-      "Participant",
-      condition,
-      filed,
-    );
-    const level = parseInt(participandResponse[0].fields.CurrentLevel);
-    let tempLevel;
-    if (data.numberOfRounds >= level + 1) {
-      tempLevel = level + 1;
-    } else {
-      tempLevel = "Completed";
-    }
-
-    const formatted = formatAndReturnUpdatedData(
-      participandResponse,
-      tempLevel,
-    );
-    if (submissionType == "Each member does  their own submission") {
-      let filed = ["GoogleSheetID"];
-      let condition = `AND({ParticipantEmail} = "${data.email}",{RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
-      let response = await fetchWithCondition(
-        "IndividualSheet",
-        condition,
-        filed,
-      );
-      await updateLevel("Participant", formatted.records);
-      sheetID = response[0].fields.GoogleSheetID;
-    } else if (
-      submissionType == "Each group member can submit  group answer" ||
-      submissionType == "Only one peson can submit group answer"
-    ) {
-      let filed = ["GoogleSheetID"];
-      let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
-      let response = await fetchWithCondition("GroupSheet", condition, filed);
-      let formattedData = updateCurrentLevels(response, data.level);
-      for (const record of formattedData) {
-        await updateGameInitiatedRecord(
-          "Participant",
-          record.id,
-          record.fields,
-        );
-      }
-
-      sheetID = response[0].fields.GoogleSheetID;
-    }
-
-    await storeAnsweresInSheet(sheetID, data.answers, data.level);
-
-    return {
-      success: true,
-      level: level + 1,
-      message: "Answers Stored",
-    };
-  } catch (error) {
-    console.error("Error Storing ans", error);
-    throw error;
-  }
-};
-
 const getScore = async (data) => {
   const { groupName, roomNumber, gameID, level, email } = data;
   try {
@@ -632,7 +559,6 @@ module.exports = {
   selectRole,
   fetchGroupDetails,
   fetchParticipants,
-  storeAnsweres,
   gameCompleted,
   getScore,
   getMember,

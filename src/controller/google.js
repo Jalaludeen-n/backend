@@ -19,8 +19,7 @@ const updateCellValues = async (spreadsheetId, values, level) => {
     await jwtClient.authorize();
     const sheets = google.sheets({ version: "v4", auth: jwtClient });
 
-    // const range = `Output!${column}${startRow}:${column}${endRow}`;
-    const range = `Output!B${level}`;
+    const range = `Output!A${level}`;
 
     const resource = {
       values: [values], // Assuming "values" is an array of new values
@@ -114,61 +113,19 @@ const createCopy = async (fileId, fileName) => {
   }
 };
 
-const convertToPDFf = async (spreadsheetId, sheetName, pdfFileName) => {
-  try {
-    const sheets = google.sheets({ version: "v4", auth: jwtClient });
-
-    // Get the sheet ID by sheet name
-    const { data } = await sheets.spreadsheets.get({
-      spreadsheetId,
-    });
-    const sheet = data.sheets.find((s) => s.properties.title === sheetName);
-
-    if (!sheet) {
-      console.error(`Sheet '${sheetName}' not found in the spreadsheet.`);
-      return;
-    }
-
-    // Export the sheet as a PDF
-    const response = await sheets.spreadsheets.sheets.copyTo({
-      spreadsheetId,
-      sheetId: sheet.properties.sheetId,
-      resource: {
-        destinationSpreadsheetId: spreadsheetId,
-      },
-    });
-
-    // Create a directory for the PDF if it doesn't exist
-    const pdfDirectory = "fullSheet";
-    if (!fs.existsSync(pdfDirectory)) {
-      fs.mkdirSync(pdfDirectory);
-    }
-
-    // Create a write stream for the PDF file
-    const dest = fs.createWriteStream(path.join(pdfDirectory, pdfFileName));
-
-    // Pipe the response data to the destination
-    response.data.pipe(dest);
-
-    dest.on("finish", () => {
-      console.log(`Downloaded ${pdfFileName}`);
-    });
-  } catch (err) {
-    console.error("Error:", err);
-  }
-};
 const convertToPDF = async (spreadsheetId, pdfFileName) => {
   try {
     await jwtClient.authorize();
     const drive = google.drive({ version: "v3", auth: jwtClient });
-    const pageHeight = 7; // Add the desired page height
-    const pageWidth = 8.5; // Add the desired page width
+    const pageHeight = 7;
+    const pageWidth = 8.5;
     const exportOptions = {
       fileId: spreadsheetId,
       mimeType: "application/pdf",
       pageHeight,
       pageWidth,
       portrait: false,
+      ranges: `Round 1!A1:M50`,
     };
 
     const response = await drive.files.export(exportOptions, {
@@ -193,6 +150,35 @@ const convertToPDF = async (spreadsheetId, pdfFileName) => {
     console.error("Error:", err);
   }
 };
+async function getStoredAnswers(fileID, name, level) {
+  try {
+    await jwtClient.authorize();
+    const sheets = google.sheets({ version: "v4", auth: jwtClient });
+    const range = `${name}!A1:Z1`;
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: fileID,
+      range: range,
+    });
+    const values = response.data.values;
+    return values;
+  } catch (err) {
+    console.error("Error retrieving values:", err.message);
+  }
+}
+async function fetchStoredQustionsAndAnswers(range, id) {
+  try {
+    await jwtClient.authorize();
+    const sheets = google.sheets({ version: "v4", auth: jwtClient });
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: id,
+      range: range,
+    });
+    const values = response.data.values;
+    return values;
+  } catch (err) {
+    console.error("Error retrieving values:", err.message);
+  }
+}
 
 async function getSheetValues(fileID, name) {
   try {
@@ -218,4 +204,6 @@ module.exports = {
   deleteAllFiles,
   listFiles,
   convertToPDF,
+  getStoredAnswers,
+  fetchStoredQustionsAndAnswers,
 };

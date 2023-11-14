@@ -5,6 +5,8 @@ const {
   convertToPDF,
   getSheetValues,
   updateCellValues,
+  getStoredAnswers,
+  fetchStoredQustionsAndAnswers,
 } = require("../controller/google");
 function formatData(data) {
   const formattedData = [];
@@ -39,10 +41,101 @@ function formatData(data) {
   return formattedData;
 }
 
+function extractQuestions(data) {
+  const formattedData = [];
+  let currentQuestion = {};
+
+  for (const row of data) {
+    const [question, type, options] = row;
+
+    if (question && type && question !== "Question") {
+      if (currentQuestion.question) {
+        formattedData.push(currentQuestion.question);
+        currentQuestion = {};
+      }
+
+      currentQuestion.question = question;
+    }
+  }
+
+  if (currentQuestion.question) {
+    formattedData.push(currentQuestion.question);
+  }
+
+  return formattedData;
+}
+
+const fetchAnswers = async (ID, level) => {
+  const sheetName = `Output`;
+
+  const data = await getStoredAnswers(
+    "1zjHBgRgjv3XEFc8WAX6dTRaKBOgoCUw0CBBJmR_hTa4",
+    sheetName,
+    level,
+  );
+
+  return data;
+};
+const fetchQustionsAndAnswers = async (ID, level) => {
+  const data = [];
+
+  const ranges = generateRanges(level);
+  for (const range of ranges) {
+    const result = await fetchStoredQustionsAndAnswers(
+      range,
+      "1zjHBgRgjv3XEFc8WAX6dTRaKBOgoCUw0CBBJmR_hTa4",
+    );
+    data.push(extractQuestions(result));
+  }
+
+  const results = await fetchStoredQustionsAndAnswers(
+    "Output!A:Z",
+    "1zjHBgRgjv3XEFc8WAX6dTRaKBOgoCUw0CBBJmR_hTa4",
+  );
+  const result = results.splice(0, level);
+
+  const output = combineQuestionsAndAnswers(data, result);
+  return output;
+};
+
+function combineQuestionsAndAnswers(questionsArray, answersArray) {
+  if (questionsArray.length !== answersArray.length) {
+    throw new Error("Questions and answers arrays must have the same length.");
+  }
+
+  const combinedArray = [];
+
+  for (let i = 0; i < questionsArray.length; i++) {
+    const questions = questionsArray[i];
+    const answers = answersArray[i];
+    const combinedObject = {};
+
+    for (let j = 0; j < questions.length; j++) {
+      combinedObject[questions[j]] = answers[j];
+    }
+
+    combinedArray.push(combinedObject);
+  }
+
+  return combinedArray;
+}
+
+function generateRanges(level) {
+  // Assuming the level sheets are named "Level 1", "Level 2", ..., "Output"
+  const ranges = [];
+  for (let i = 1; i <= level; i++) {
+    ranges.push(`Level ${i}!A1:C`);
+  }
+
+  return ranges;
+}
 const fetchQustions = async (ID, level) => {
   const sheetName = `Level ${level}`;
 
-  const data = await getSheetValues(ID, sheetName);
+  const data = await getSheetValues(
+    "1zjHBgRgjv3XEFc8WAX6dTRaKBOgoCUw0CBBJmR_hTa4",
+    sheetName,
+  );
   const formattedData = formatData(data);
   formattedData.splice(0, 1);
   return formattedData;
@@ -76,14 +169,15 @@ function formatSheetData(sheetData) {
 }
 
 const storeAnsweresInSheet = async (ID, values, level) => {
-  await updateCellValues(ID, values, level);
+  await updateCellValues(
+    "1zjHBgRgjv3XEFc8WAX6dTRaKBOgoCUw0CBBJmR_hTa4",
+    values,
+    level,
+  );
 };
 
 async function getPDF(id, name) {
-  await convertToPDF(
-    "1zjHBgRgjv3XEFc8WAX6dTRaKBOgoCUw0CBBJmR_hTa4",
-    "tdsdest.pdf",
-  );
+  await convertToPDF("1zjHBgRgjv3XEFc8WAX6dTRaKBOgoCUw0CBBJmR_hTa4", name);
 }
 async function deleteAllPDF() {
   await deleteAllFiles();
@@ -100,4 +194,6 @@ module.exports = {
   fetchScore,
   getPDF,
   deleteAllPDF,
+  fetchAnswers,
+  fetchQustionsAndAnswers,
 };

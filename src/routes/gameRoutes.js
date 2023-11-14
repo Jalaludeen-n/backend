@@ -8,11 +8,9 @@ const {
   getRunningAndPastGame,
   getRoles,
   fetchParticipantDetails,
-
   fetchGroupDetails,
   fetchParticipants,
   selectRole,
-  storeAnsweres,
   gameCompleted,
   getScore,
   getMember,
@@ -22,6 +20,7 @@ const { joinGame } = require("./../components/airtable/joinGame");
 
 const { fetchGameData } = require("../controller/airtable");
 const { sendEmailWithPDF } = require("../components/mail/send");
+const { test } = require("../components/decision");
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -57,6 +56,15 @@ router.post("/new", upload.array("pdf"), async (req, res) => {
     res.status(500).json({ error: "An error occurred" });
   }
 });
+router.get("/test", async (req, res) => {
+  try {
+    await test();
+    res.status(200);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
 
 router.post("/start", async (req, res) => {
   try {
@@ -78,15 +86,6 @@ router.get("/running", async (req, res) => {
     res.status(500).json({ error: "An error occurred" });
   }
 });
-// router.get("/over", async (req, res) => {
-//   try {
-//     const data = await saveTheGame();
-//     await res.status(200).json(data);
-//   } catch (error) {
-//     console.error("Error:", error);
-//     res.status(500).json({ error: "An error occurred" });
-//   }
-// });
 
 router.post("/details", async (req, res) => {
   try {
@@ -100,19 +99,6 @@ router.post("/details", async (req, res) => {
     res.status(500).json({ error: "An error occurred" });
   }
 });
-
-router.post("/answeres", async (req, res) => {
-  try {
-    checkRequestBodyAndDataField(req, res);
-    const parsedValue = JSON.parse(req.body.data);
-    const data = await storeAnsweres(parsedValue);
-    res.status(200).json(data);
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ error: "An error occurred" });
-  }
-});
-
 
 router.post("/over", async (req, res) => {
   try {
