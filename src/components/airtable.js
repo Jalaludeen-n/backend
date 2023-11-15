@@ -23,11 +23,11 @@ const { convertToPDF } = require("../controller/google");
 const {
   generateUniqueCode,
   getFile,
-  getChart,
   extractFieldsForMember,
 } = require("../helpers/helper");
 
 const { fetchRolesAutoSelection } = require("./airtable/condition");
+const { getChart } = require( "../helpers/pdfConverter" );
 
 const startGame = async (data) => {
   try {

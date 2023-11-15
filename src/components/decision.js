@@ -1,4 +1,4 @@
-const { getChart } = require("../helpers/helper");
+const { getChart } = require("../helpers/pdfConverter");
 const {
   fetchQustions,
   storeAnsweresInSheet,
@@ -6,7 +6,6 @@ const {
   getPDF,
 } = require("./googleSheets");
 const { updateRound } = require("./level");
-
 const getQustions = async (data) => {
   try {
     const qustions = await fetchQustions(data.sheetID, data.level);
@@ -66,10 +65,11 @@ const storeAnsweres = async (data) => {
   try {
     const name = `${sheetID}.pdf`;
     await storeAnsweresInSheet(sheetID, answers, level);
-    await updateRound(data);
+    const updatedDate = await updateRound(data);
     await getPDF(sheetID, name);
 
     return {
+      data: updatedDate,
       success: true,
       message: "Answers Stored",
     };

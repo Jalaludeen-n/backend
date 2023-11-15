@@ -47,7 +47,6 @@ const startLevel = async (data) => {
 
 const getRoundPdf = async (data) => {
   try {
-    console.log("ds");
     const fileName = `${data.GameName}_Level${data.level}.pdf`;
     const gameInstruction = await getFile(fileName);
     return {
