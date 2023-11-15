@@ -54,9 +54,11 @@ const getResult = async (dataFromClient) => {
 };
 
 const test = async () => {
-  getChart("firsttry.pdf", 10)
-    .then((outputPath) => console.log("PDF saved to:", outputPath))
-    .catch((error) => console.error("Error:", error));
+  await getPDF("ds", "1bsXUHh3uC65CYvxvdrTwby9Rj-SAqdRKIPskLaQgXbU.pdf");
+
+  // getChart("1bsXUHh3uC65CYvxvdrTwby9Rj-SAqdRKIPskLaQgXbU.pdf", 1)
+  //   .then((outputPath) => console.log("PDF saved to:", outputPath))
+  //   .catch((error) => console.error("Error:", error));
 };
 
 const storeAnsweres = async (data) => {

@@ -61,8 +61,9 @@ const getRoundPdf = async (data) => {
   }
 };
 
-const updateRound = async (data) => {
-  const { groupName, gameId, roomNumber, email, resultsSubmission } = data;
+const updateRound = async (clientData) => {
+  const { groupName, gameId, roomNumber, email, resultsSubmission } =
+    clientData;
 
   try {
     let filed = ["GameID", "Role", "ParticipantEmail", "Name", "CurrentLevel"];
@@ -71,14 +72,40 @@ const updateRound = async (data) => {
     const { id, updatedData } = createUpdatedData(response[0]);
 
     await updateGameInitiatedRecord("Participant", id, updatedData);
+    const { data } = await getCurrentLevelStatus(
+      roomNumber,
+      gameId,
+      parseInt(updatedData.CurrentLevel),
+    );
 
     return {
       success: true,
-      data: { updatedData },
+      data: { ...updatedData, started: data },
       message: "Data fetched",
     };
   } catch (error) {
     console.error("Error updating all the user round:", error);
+    throw error;
+  }
+};
+
+const getCurrentLevelStatus = async (roomNumber, gameId, level) => {
+  try {
+    let started = false;
+    let filed = ["Level", "Status"];
+    let condition = `AND({gameID} = "${gameId}",{Level} = "${level}",{RoomNumber} = "${roomNumber}", {Status} = "Started")`;
+    let response = await fetchWithCondition("Level", condition, filed);
+    if (response) {
+      started = true;
+    }
+
+    return {
+      success: true,
+      data: started,
+      message: "Data fetched",
+    };
+  } catch (error) {
+    console.error("Error Fetching member:", error);
     throw error;
   }
 };
@@ -142,4 +169,5 @@ module.exports = {
   startLevel,
   getRoundPdf,
   updateRound,
+  getCurrentLevelStatus,
 };

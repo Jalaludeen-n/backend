@@ -6,6 +6,7 @@ const {
   startLevel,
   getRoundPdf,
   updateRound,
+  getCurrentLevelStatus,
 } = require("../components/level");
 
 router.post("/start", async (req, res) => {
@@ -21,6 +22,18 @@ router.get("/status", async (req, res) => {
   try {
     const queryData = req.query;
     const data = await getLevelStatus(queryData);
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
+router.get("/current-status", async (req, res) => {
+  try {
+    const queryData = req.query;
+    const { roomNumber, gameId, level } = queryData;
+
+    const data = await getCurrentLevelStatus(roomNumber, gameId, level);
     res.status(200).json(data);
   } catch (error) {
     console.error("Error:", error);
