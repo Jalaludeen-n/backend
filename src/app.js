@@ -31,6 +31,19 @@ const wss = socketIO(server, {
 
 app.use(cors());
 app.use(express.json());
+app.use((req, res, next) => {
+  req.wss = wss;
+  next();
+});
+
+wss.on("connection", (ws) => {
+  console.log("WebSocket connection established");
+
+  // Handle WebSocket disconnection
+  ws.on("close", () => {
+    console.log("WebSocket connection closed");
+  });
+});
 
 app.use("/game", gameRoutes);
 app.use("/level", levelRoutes);
@@ -73,15 +86,6 @@ app.post("/levelWebhook", async (req, res) => {
     console.error("Error processing webhook:", error);
   }
   res.status(200).end();
-});
-
-wss.on("connection", (ws) => {
-  console.log("WebSocket connection established");
-
-  // Handle WebSocket disconnection
-  ws.on("close", () => {
-    console.log("WebSocket connection closed");
-  });
 });
 
 const port = 3001;

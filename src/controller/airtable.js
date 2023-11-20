@@ -1,6 +1,6 @@
 const Airtable = require("airtable");
 const axios = require("axios"); // Import Axios or your preferred HTTP client library
-const apiKey = process.env.AIRTABLE_API_KEY;
+const apiKey = process.env.TOKEN_ID;
 const baseId = process.env.BASE_ID;
 const base = new Airtable({ apiKey }).base(baseId);
 

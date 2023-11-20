@@ -29,9 +29,11 @@ const getLevelStatus = async (data) => {
   }
 };
 
-const startLevel = async (data) => {
+const startLevel = async (data, wss) => {
   try {
     const formattedData = parseLevelData(data);
+    const res = { CurrentLevel: data.level, started: true };
+    wss.sockets.emit("updatelevel", res);
 
     await createRecord(formattedData, "Level");
 
@@ -60,28 +62,42 @@ const getRoundPdf = async (data) => {
   }
 };
 
-const updateRound = async (clientData) => {
+const updateRound = async (clientData, wss) => {
   const { groupName, gameId, roomNumber, email, resultsSubmission } =
     clientData;
 
   try {
     let filed = ["GameID", "Role", "ParticipantEmail", "Name", "CurrentLevel"];
-    let condition = `AND({GroupName} = "${groupName}",{GameID} = "${gameId}",{RoomNumber} = "${roomNumber}",{ParticipantEmail} = "${email}")`;
+    let condition;
+    if (resultsSubmission == "Each member does  their own submission") {
+      condition = `AND({GroupName} = "${groupName}", {GameID} = "${gameId}", {RoomNumber} = "${roomNumber}", {ParticipantEmail} = "${email}")`;
+    } else {
+      condition = `AND({GroupName} = "${groupName}", {GameID} = "${gameId}", {RoomNumber} = "${roomNumber}")`;
+    }
     let response = await fetchWithCondition("Participant", condition, filed);
-    const { id, updatedData } = createUpdatedData(response[0]);
+    const updatedParticipants = await Promise.all(
+      response.map(async (participant) => {
+        const { id, updatedData } = createUpdatedData(participant);
+        const { data } = await getCurrentLevelStatus(
+          roomNumber,
+          gameId,
+          parseInt(updatedData.CurrentLevel),
+        );
 
-    await updateGameInitiatedRecord("Participant", id, updatedData);
-    const { data } = await getCurrentLevelStatus(
-      roomNumber,
-      gameId,
-      parseInt(updatedData.CurrentLevel),
+        await updateGameInitiatedRecord("Participant", id, updatedData);
+
+        return { ...updatedData, started: data };
+      }),
     );
+    // await updateGameInitiatedRecord("Participant", id, updatedData);
+    const res = updatedParticipants[0];
+    wss.sockets.emit("updatelevel", res);
 
-    return {
-      success: true,
-      data: { ...updatedData, started: data },
-      message: "Data fetched",
-    };
+    // return {
+    //   success: true,
+    //   data: res,
+    //   message: "Data fetched",
+    // };
   } catch (error) {
     console.error("Error updating all the user round:", error);
     throw error;
