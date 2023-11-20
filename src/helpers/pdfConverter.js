@@ -1,5 +1,6 @@
 const { PDFDocument, rgb } = require("pdf-lib");
 const fs = require("fs").promises;
+const path = require("path");
 
 const getChart = async (name, pageNumber) => {
   const pdfFilePath = path.join(__dirname, "../fullSheet", name);
