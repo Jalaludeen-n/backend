@@ -1,3 +1,7 @@
+const {
+  fetchWithCondition,
+  updateGameInitiatedRecord,
+} = require("../controller/airtable");
 const { getChart } = require("../helpers/pdfConverter");
 const {
   fetchQustions,
@@ -5,7 +9,11 @@ const {
   fetchQustionsAndAnswers,
   getPDF,
 } = require("./googleSheets");
-const { updateRound } = require("./level");
+const {
+  updateRound,
+  getCurrentLevelStatus,
+  createUpdatedData,
+} = require("./level");
 const getQustions = async (data) => {
   try {
     const qustions = await fetchQustions(data.sheetID, data.level);
@@ -60,16 +68,56 @@ const test = async () => {
   //   .catch((error) => console.error("Error:", error));
 };
 
-const storeAnsweres = async (data) => {
-  const { sheetID, answers, level } = data;
+const storeAnsweres = async (data, wss) => {
+  const {
+    sheetID,
+    groupName,
+    gameId,
+    roomNumber,
+    answers,
+    level,
+    email,
+    resultsSubmission,
+  } = data;
+
   try {
     const name = `${sheetID}.pdf`;
     await storeAnsweresInSheet(sheetID, answers, level);
-    const updatedDate = await updateRound(data);
+
+    let filed = ["GameID", "Role", "ParticipantEmail", "Name", "CurrentLevel"];
+    let condition;
+    if (resultsSubmission == "Each member does  their own submission") {
+      condition = `AND({GroupName} = "${groupName}", {GameID} = "${gameId}", {RoomNumber} = "${roomNumber}", {ParticipantEmail} = "${email}")`;
+    } else {
+      condition = `AND({GroupName} = "${groupName}", {GameID} = "${gameId}", {RoomNumber} = "${roomNumber}")`;
+    }
+
+    let updatedParticipants;
+
+    let response = await fetchWithCondition("Participant", condition, filed);
+    updatedParticipants = await Promise.all(
+      response.map(async (participant) => {
+        const { id, updatedData } = createUpdatedData(participant);
+        const { status } = await getCurrentLevelStatus(
+          roomNumber,
+          gameId,
+          parseInt(updatedData.CurrentLevel),
+        );
+
+        await updateGameInitiatedRecord("Participant", id, updatedData);
+        return { ...updatedData, started: status };
+      }),
+    );
+
+    const res = updatedParticipants[0];
+    if (!(resultsSubmission == "Each member does  their own submission")) {
+      wss.sockets.emit("Movelevel", { ...res });
+    }
+
     await getPDF(sheetID, name);
 
     return {
-      data: updatedDate,
+      data: res,
       success: true,
       message: "Answers Stored",
     };
