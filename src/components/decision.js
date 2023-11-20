@@ -39,7 +39,7 @@ const getResult = async (dataFromClient) => {
   try {
     const { level, sheetID } = dataFromClient;
     const name = `${sheetID}.pdf`;
-    const result = await getChart(name, level);
+    const result = await getChart(name, level - 1);
 
     return {
       success: true,

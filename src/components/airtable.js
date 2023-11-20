@@ -27,7 +27,7 @@ const {
 } = require("../helpers/helper");
 
 const { fetchRolesAutoSelection } = require("./airtable/condition");
-const { getChart } = require( "../helpers/pdfConverter" );
+const { getChart } = require("../helpers/pdfConverter");
 
 const startGame = async (data) => {
   try {
@@ -329,22 +329,22 @@ const groupsWithHighestLevel = async (queryResult, totalLevel) => {
   }
 };
 
-const fetchGroupDetails = async (data) => {
+const fetchGroupDetails = async (dataFromClient) => {
   try {
     let filed = ["GameName", "NumberOfRounds"];
-    let condition = `{GameID} = "${data.GameID}"`;
+    let condition = `{GameID} = "${dataFromClient.GameID}"`;
     let gamesResponse = await fetchWithCondition("Games", condition, filed);
 
     if (!gamesResponse || gamesResponse.length === 0) {
       return {
         success: false,
-        Data: null,
+        data: null,
         Message: "Game details not found",
       };
     }
 
     filed = ["CurrentLevel", "GroupName"];
-    condition = `AND({GameID} = "${data.GameID}", {RoomNumber} = "${data.RoomNumber}")`;
+    condition = `AND({GameID} = "${dataFromClient.GameID}", {RoomNumber} = "${dataFromClient.RoomNumber}")`;
 
     let runningGamesResponse = await fetchWithCondition(
       "Participant",
@@ -355,7 +355,7 @@ const fetchGroupDetails = async (data) => {
     if (!runningGamesResponse || runningGamesResponse.length === 0) {
       return {
         success: false,
-        Data: null,
+        data: null,
         Message: "Running game details not found",
       };
     }
@@ -365,7 +365,7 @@ const fetchGroupDetails = async (data) => {
       runningGamesResponse,
       totalLevels,
     );
-    const Data = {
+    const data = {
       Name: gamesResponse[0].fields.GameName,
       Levels: level.groupsWithHighestLevel,
       currentLevel: level.highestLevel.toString(),
@@ -374,7 +374,7 @@ const fetchGroupDetails = async (data) => {
 
     return {
       success: true,
-      Data,
+      data,
       Message: "Data fetched",
     };
   } catch (error) {
