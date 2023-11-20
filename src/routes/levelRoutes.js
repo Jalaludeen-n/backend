@@ -11,7 +11,7 @@ const {
 
 router.post("/start", async (req, res) => {
   try {
-    startLevel(JSON.parse(req.body.data));
+    startLevel(JSON.parse(req.body.data), req.wss);
     res.status(200).json({ message: "Game Started successfully" });
   } catch (error) {
     console.error("Error:", error);
@@ -43,8 +43,8 @@ router.get("/current-status", async (req, res) => {
 
 router.patch("/update", async (req, res) => {
   try {
-    const data = await updateRound(JSON.parse(req.body.data));
-    res.status(200).json(data);
+    const data = await updateRound(JSON.parse(req.body.data), req.wss);
+    res.status(200).end();
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "An error occurred" });
