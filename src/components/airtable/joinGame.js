@@ -81,12 +81,9 @@ const joinGame = async (data) => {
     const {
       RolesAutoSelection,
       ResultsSubmission,
-      GoogleSheet,
       GameName,
       NumberOfRounds,
       ScoreVisibilityForPlayers,
-      IndividualInstructionsPerRound,
-      Instruction,
       Date,
     } = roleSelectionResponse[0].fields;
     let roleAutoAssigned = false;

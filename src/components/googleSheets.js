@@ -68,11 +68,7 @@ function extractQuestions(data) {
 const fetchAnswers = async (ID, level) => {
   const sheetName = `Output`;
 
-  const data = await getStoredAnswers(
-    "1zjHBgRgjv3XEFc8WAX6dTRaKBOgoCUw0CBBJmR_hTa4",
-    sheetName,
-    level,
-  );
+  const data = await getStoredAnswers(ID, sheetName, level);
 
   return data;
 };
@@ -81,17 +77,11 @@ const fetchQustionsAndAnswers = async (ID, level) => {
 
   const ranges = generateRanges(level);
   for (const range of ranges) {
-    const result = await fetchStoredQustionsAndAnswers(
-      range,
-      "1zjHBgRgjv3XEFc8WAX6dTRaKBOgoCUw0CBBJmR_hTa4",
-    );
+    const result = await fetchStoredQustionsAndAnswers(range, ID);
     data.push(extractQuestions(result));
   }
 
-  const results = await fetchStoredQustionsAndAnswers(
-    "Output!A:Z",
-    "1zjHBgRgjv3XEFc8WAX6dTRaKBOgoCUw0CBBJmR_hTa4",
-  );
+  const results = await fetchStoredQustionsAndAnswers("Output!A:Z", ID);
   const result = results.splice(0, level);
 
   const output = combineQuestionsAndAnswers(data, result);
@@ -132,10 +122,7 @@ function generateRanges(level) {
 const fetchQustions = async (ID, level) => {
   const sheetName = `Level ${level}`;
 
-  const data = await getSheetValues(
-    "1zjHBgRgjv3XEFc8WAX6dTRaKBOgoCUw0CBBJmR_hTa4",
-    sheetName,
-  );
+  const data = await getSheetValues(ID, sheetName);
   const formattedData = formatData(data);
   formattedData.splice(0, 1);
   return formattedData;
@@ -169,15 +156,11 @@ function formatSheetData(sheetData) {
 }
 
 const storeAnsweresInSheet = async (ID, values, level) => {
-  await updateCellValues(
-    "1zjHBgRgjv3XEFc8WAX6dTRaKBOgoCUw0CBBJmR_hTa4",
-    values,
-    level,
-  );
+  await updateCellValues(ID, values, level);
 };
 
 async function getPDF(id, name) {
-  await convertToPDF("1zjHBgRgjv3XEFc8WAX6dTRaKBOgoCUw0CBBJmR_hTa4", name);
+  await convertToPDF(id, name);
 }
 async function deleteAllPDF() {
   await deleteAllFiles();

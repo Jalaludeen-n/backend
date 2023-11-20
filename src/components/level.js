@@ -5,7 +5,6 @@ const {
 } = require("../controller/airtable");
 const { extractFieldsForMember, getFile } = require("../helpers/helper");
 const { parseLevelData } = require("../helpers/parse");
-const { fetchParticipants } = require("./airtable");
 
 const getLevelStatus = async (data) => {
   const { RoomNumber, GameID, Level } = data;
@@ -34,7 +33,6 @@ const startLevel = async (data, wss) => {
     const formattedData = parseLevelData(data);
     const res = { CurrentLevel: data.level, started: true };
     wss.sockets.emit("updatelevel", res);
-
     await createRecord(formattedData, "Level");
 
     return {
