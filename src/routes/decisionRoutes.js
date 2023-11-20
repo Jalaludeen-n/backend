@@ -43,7 +43,7 @@ router.get("/result", async (req, res) => {
 router.post("/answeres", async (req, res) => {
   try {
     const parsedValue = JSON.parse(req.body.data);
-    const data = await storeAnsweres(parsedValue);
+    const data = await storeAnsweres(parsedValue, req.wss);
     res.status(200).json(data);
   } catch (error) {
     console.error("Error:", error);

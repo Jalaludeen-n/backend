@@ -72,8 +72,11 @@ const updateRound = async (clientData, wss) => {
     } else {
       condition = `AND({GroupName} = "${groupName}", {GameID} = "${gameId}", {RoomNumber} = "${roomNumber}")`;
     }
+
+    let updatedParticipants;
+
     let response = await fetchWithCondition("Participant", condition, filed);
-    const updatedParticipants = await Promise.all(
+    updatedParticipants = await Promise.all(
       response.map(async (participant) => {
         const { id, updatedData } = createUpdatedData(participant);
         const { data } = await getCurrentLevelStatus(
@@ -81,21 +84,23 @@ const updateRound = async (clientData, wss) => {
           gameId,
           parseInt(updatedData.CurrentLevel),
         );
-
-        await updateGameInitiatedRecord("Participant", id, updatedData);
-
-        return { ...updatedData, started: data };
+        if (data) {
+          await updateGameInitiatedRecord("Participant", id, updatedData);
+          return { ...updatedData, started: data };
+        } else {
+          return { ...updatedData, started: data };
+        }
       }),
     );
-    // await updateGameInitiatedRecord("Participant", id, updatedData);
+
     const res = updatedParticipants[0];
     wss.sockets.emit("updatelevel", res);
 
-    // return {
-    //   success: true,
-    //   data: res,
-    //   message: "Data fetched",
-    // };
+    return {
+      success: true,
+      data: res,
+      message: "Data fetched",
+    };
   } catch (error) {
     console.error("Error updating all the user round:", error);
     throw error;
@@ -183,4 +188,5 @@ module.exports = {
   getRoundPdf,
   updateRound,
   getCurrentLevelStatus,
+  createUpdatedData,
 };
