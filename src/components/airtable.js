@@ -16,7 +16,7 @@ const {
 const {
   getRemainingRoles,
   assignRoleManually,
-} = require("../components/gameDetails");
+} = require("./level/gameDetails");
 const { fetchScore } = require("../components/googleSheets");
 const { convertToPDF } = require("../controller/google");
 
@@ -385,8 +385,9 @@ const fetchGroupDetails = async (dataFromClient) => {
 
 const fetchParticipants = async (data) => {
   try {
+    const { roomNumber, groupName, email } = data;
     const fetchedFields = ["Role", "ParticipantEmail", "Name", "GameID"];
-    const condition = `AND({RoomNumber} = "${data.roomNumber}", {GroupName} = "${data.groupName}")`;
+    const condition = `AND({RoomNumber} = "${roomNumber}", {GroupName} = "${groupName}")`;
 
     const response = await fetchWithCondition(
       "Participant",
@@ -394,42 +395,23 @@ const fetchParticipants = async (data) => {
       fetchedFields,
     );
 
-    const filteredparticipants = filterAndCondition(
+    const filteredParticipants = filterAndCondition(
       response,
-      data.email,
-      data.roomNumber,
+      email,
+      roomNumber,
     );
-
-    let rolesAutoAssigned = data.roleAutoAssigned;
-    if (typeof rolesAutoAssigned === "undefined") {
-      const rolesAutoSelectionResponse = await fetchRolesAutoSelection(
-        response[0].fields.GameID,
-      );
-      rolesAutoAssigned =
-        rolesAutoSelectionResponse[0].fields.RolesAutoSelection;
-    }
-
-    const participants = {
-      filteredparticipants,
-      rolesAutoAssigned,
-    };
-
-    if (!rolesAutoAssigned) {
-      const remainingRoles = await getRemainingRoles(
-        data.roomNumber,
-        data.groupName,
-      );
-      participants.roles = remainingRoles;
-    }
 
     return {
       success: true,
-      data: participants,
+      data: filteredParticipants,
       message: "Data fetched",
     };
   } catch (error) {
-    console.error("Error fetching roles:", error);
-    throw error;
+    console.error("Error fetching participants:", error);
+    return {
+      success: false,
+      error: "Failed to fetch participants",
+    };
   }
 };
 

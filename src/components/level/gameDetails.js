@@ -1,4 +1,4 @@
-const { fetchWithCondition } = require("../controller/airtable");
+const { fetchWithCondition } = require("../../controller/airtable");
 
 const assignedRoles = {}; // { groupName: { email: role } }
 let roles = [];

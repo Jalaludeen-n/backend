@@ -7,7 +7,7 @@ const {
   getRoundPdf,
   updateRound,
   getCurrentLevelStatus,
-} = require("../components/level");
+} = require("../components/level/level");
 
 router.post("/start", async (req, res) => {
   try {

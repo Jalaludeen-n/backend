@@ -2,9 +2,9 @@ const {
   fetchWithCondition,
   createRecord,
   updateGameInitiatedRecord,
-} = require("../controller/airtable");
-const { extractFieldsForMember, getFile } = require("../helpers/helper");
-const { parseLevelData } = require("../helpers/parse");
+} = require("../../controller/airtable");
+const { extractFieldsForMember, getFile } = require("../../helpers/helper");
+const { parseLevelData } = require("../../helpers/parse");
 
 const getLevelStatus = async (data) => {
   const { RoomNumber, GameID, Level } = data;
@@ -92,8 +92,14 @@ const updateRound = async (clientData, wss) => {
         }
       }),
     );
-
-    const res = updatedParticipants[0];
+    const playerClick = true;
+    const res = {
+      ...updatedParticipants[0],
+      groupName,
+      email,
+      roomNumber,
+      playerClick,
+    };
     wss.sockets.emit("updatelevel", res);
 
     return {
@@ -127,25 +133,7 @@ const getCurrentLevelStatus = async (roomNumber, gameId, level) => {
     throw error;
   }
 };
-const updateAlltheUserRounds = async (GroupName, GameID, RoomNumber, round) => {
-  try {
-    let filed = ["GameID", "Role", "ParticipantEmail", "Name"];
-    let condition = `AND({GroupName} = "${GroupName}",{GameID} = "${GameID}",{RoomNumber} = "${RoomNumber}")`;
-    let response = await fetchWithCondition("Participant", condition, filed);
-    const { id, updatedData } = formatAndReturnUpdatedData(response, round);
 
-    await updateGameInitiatedRecord("Participant", id, updatedData);
-
-    return {
-      success: true,
-      data: {},
-      message: "Data fetched",
-    };
-  } catch (error) {
-    console.error("Error updating all the user round:", error);
-    throw error;
-  }
-};
 function createUpdatedData(data) {
   if (!data || !data.id || !data.fields || !data.fields.CurrentLevel) {
     return null;
@@ -159,17 +147,6 @@ function createUpdatedData(data) {
 
   return { id, updatedData };
 }
-
-const formatUpdatedData = (records, level) => {
-  const updatedData = records.map((record) => ({
-    id: record.id,
-    fields: {
-      CurrentLevel: record.level.toString(),
-    },
-  }));
-
-  return { records: updatedData };
-};
 
 const formatAndReturnUpdatedData = (records, level) => {
   const updatedData = records.map((record) => ({

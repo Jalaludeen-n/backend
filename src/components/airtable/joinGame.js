@@ -1,4 +1,4 @@
-const { getRole } = require("../../components/gameDetails");
+const { getRole } = require("../level/gameDetails");
 
 const { createCopySheet } = require("../../components/googleSheets");
 const { extractSpreadsheetId } = require("../../helpers/helper");
