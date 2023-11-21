@@ -138,16 +138,21 @@ const convertToPDF = async (spreadsheetId, pdfFileName) => {
 
     const dest = fs.createWriteStream(path.join(pdfDirectory, pdfFileName));
 
-    response.data
-      .on("end", () => {
-        console.log(`Downloaded ${pdfFileName}`);
-      })
-      .on("error", (err) => {
-        console.error("Error:", err);
-      })
-      .pipe(dest);
+    return new Promise((resolve, reject) => {
+      response.data
+        .on("end", () => {
+          console.log(`Downloaded ${pdfFileName}`);
+          resolve(); // Resolve the Promise when the download completes
+        })
+        .on("error", (err) => {
+          console.error("Error:", err);
+          reject(err); // Reject if there's an error during download
+        })
+        .pipe(dest);
+    });
   } catch (err) {
     console.error("Error:", err);
+    throw err; // Throw any error that occurred during the process
   }
 };
 async function getStoredAnswers(fileID, name, level) {

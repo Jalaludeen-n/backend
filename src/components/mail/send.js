@@ -8,7 +8,7 @@ function sendEmailWithPDF(recipient, Name, pdfURL) {
     to: recipient,
     from: "hello@courageousteams.com",
     subject: "test",
-    templateId: "d-6fc0287ba0134144997b3952fec0167d", // Replace with your template ID
+    templateId: "d-6fc0287ba0134144997b3952fec0167d",
     dynamicTemplateData: {
       Name,
       pdf_url: pdfURL,
