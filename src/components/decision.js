@@ -9,12 +9,9 @@ const {
   fetchQustionsAndAnswers,
   getPDF,
 } = require("./googleSheets");
-const {
-  updateRound,
-  getCurrentLevelStatus,
-  createUpdatedData,
-} = require("./level/level");
+const { getCurrentLevelStatus, createUpdatedData } = require("./level/level");
 const { sendEmailWithPDF } = require("./mail/send");
+
 const getQustions = async (data) => {
   try {
     const qustions = await fetchQustions(data.sheetID, data.level);
@@ -183,10 +180,12 @@ const storeAnsweres = async (clientData, wss) => {
         CurrentLevel: level,
         started: false,
         completed: true,
+        groupName,
+        email,
       };
     }
     if (!(resultsSubmission == "Each member does  their own submission")) {
-      wss.sockets.emit("Movelevel", { ...res });
+      wss.sockets.emit("Movelevel", { ...res, name, email, groupName });
     }
 
     return {

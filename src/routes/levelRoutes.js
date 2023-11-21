@@ -7,6 +7,7 @@ const {
   getRoundPdf,
   updateRound,
   getCurrentLevelStatus,
+  updateIndivitualRound,
 } = require("../components/level/level");
 
 router.post("/start", async (req, res) => {
@@ -44,13 +45,21 @@ router.get("/current-status", async (req, res) => {
 router.patch("/update", async (req, res) => {
   try {
     const data = await updateRound(JSON.parse(req.body.data), req.wss);
-    res.status(200).end();
+    res.status(200).json(data);
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "An error occurred" });
   }
 });
-
+router.patch("/indivitual-update", async (req, res) => {
+  try {
+    const data = await updateIndivitualRound(JSON.parse(req.body.data));
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
 router.get("/pdf", async (req, res) => {
   try {
     const queryData = req.query;

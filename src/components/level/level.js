@@ -31,7 +31,11 @@ const getLevelStatus = async (data) => {
 const startLevel = async (data, wss) => {
   try {
     const formattedData = parseLevelData(data);
-    const res = { CurrentLevel: data.level, started: true };
+    const res = {
+      CurrentLevel: data.level,
+      started: true,
+      update: true,
+    };
     wss.sockets.emit("updatelevel", res);
     await createRecord(formattedData, "Level");
 
@@ -59,7 +63,37 @@ const getRoundPdf = async (data) => {
     throw error;
   }
 };
+const updateIndivitualRound = async (clientData, wss) => {
+  const { groupName, gameId, roomNumber, email } = clientData;
 
+  try {
+    let filed = ["GameID", "Role", "ParticipantEmail", "Name", "CurrentLevel"];
+    const condition = `AND({GroupName} = "${groupName}", {GameID} = "${gameId}", {RoomNumber} = "${roomNumber}", {ParticipantEmail} = "${email}")`;
+
+    let updatedParticipants;
+
+    let response = await fetchWithCondition("Participant", condition, filed);
+    updatedParticipants = await Promise.all(
+      response.map(async (participant) => {
+        const { id, updatedData } = createUpdatedData(participant);
+        await updateGameInitiatedRecord("Participant", id, updatedData);
+        return { ...updatedData, started: false };
+      }),
+    );
+    const res = {
+      ...updatedParticipants[0],
+    };
+
+    return {
+      success: true,
+      data: res,
+      message: "Data fetched",
+    };
+  } catch (error) {
+    console.error("Error updating all the user round:", error);
+    throw error;
+  }
+};
 const updateRound = async (clientData, wss) => {
   const { groupName, gameId, roomNumber, email, resultsSubmission } =
     clientData;
@@ -166,4 +200,5 @@ module.exports = {
   updateRound,
   getCurrentLevelStatus,
   createUpdatedData,
+  updateIndivitualRound,
 };
