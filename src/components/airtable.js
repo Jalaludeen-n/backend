@@ -258,14 +258,12 @@ const selectRole = async (data) => {
       response[0].id,
       formattedData,
     );
-    let submit;
+    let submit = true;
     if (data.resultsSubmission === "Only one person can submit group answer") {
       const condition = `AND({GameID} = "${data.gameId}",{Role} = "${data.role}",{Submit} = "1")`;
       const fields = ["Role", "Submit"];
       const submitRole = await fetchWithCondition("Role", condition, fields);
-      if (submitRole) {
-        submit = true;
-      } else {
+      if (!submitRole) {
         submit = false;
       }
     }
