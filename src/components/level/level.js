@@ -32,11 +32,11 @@ const startLevel = async (data, wss) => {
   try {
     const formattedData = parseLevelData(data);
     const res = {
-      CurrentLevel: data.level,
+      CurrentLevel: parseInt(data.level),
       started: true,
       update: true,
     };
-    wss.sockets.emit("updatelevel", res);
+    wss.sockets.emit("gameStarted", res);
     await createRecord(formattedData, "Level");
 
     return {
@@ -63,27 +63,28 @@ const getRoundPdf = async (data) => {
     throw error;
   }
 };
+
 const updateIndivitualRound = async (clientData, wss) => {
   const { groupName, gameId, roomNumber, email } = clientData;
-
   try {
     let filed = ["GameID", "Role", "ParticipantEmail", "Name", "CurrentLevel"];
     const condition = `AND({GroupName} = "${groupName}", {GameID} = "${gameId}", {RoomNumber} = "${roomNumber}", {ParticipantEmail} = "${email}")`;
-
-    let updatedParticipants;
-
     let response = await fetchWithCondition("Participant", condition, filed);
-    updatedParticipants = await Promise.all(
-      response.map(async (participant) => {
-        const { id, updatedData } = createUpdatedData(participant);
-        await updateGameInitiatedRecord("Participant", id, updatedData);
-        return { ...updatedData, started: false };
-      }),
-    );
-    const res = {
-      ...updatedParticipants[0],
-    };
 
+    const { id, updatedData } = createUpdatedData(
+      response[0].id,
+      response[0].fields,
+    );
+    const { data } = await getCurrentLevelStatus(
+      roomNumber,
+      gameId,
+      parseInt(updatedData.CurrentLevel),
+    );
+    if (data) await updateGameInitiatedRecord("Participant", id, updatedData);
+    const res = {
+      started: data,
+      level: updatedData.CurrentLevel,
+    };
     return {
       success: true,
       data: res,
@@ -94,8 +95,15 @@ const updateIndivitualRound = async (clientData, wss) => {
     throw error;
   }
 };
+function createUpdatedData(id, fields) {
+  const currentLevel = String(Number(fields.CurrentLevel) + 1);
+  const updatedData = {
+    CurrentLevel: currentLevel,
+  };
+  return { id, updatedData };
+}
 const updateRound = async (clientData, wss) => {
-  const { groupName, gameId, roomNumber, email, resultsSubmission } =
+  const { groupName, gameId, roomNumber, email, resultsSubmission, level } =
     clientData;
 
   try {
@@ -112,18 +120,18 @@ const updateRound = async (clientData, wss) => {
     let response = await fetchWithCondition("Participant", condition, filed);
     updatedParticipants = await Promise.all(
       response.map(async (participant) => {
-        const { id, updatedData } = createUpdatedData(participant);
+        const { id, updatedData } = createUpdatedData(
+          participant.id,
+          participant.fields,
+        );
         const { data } = await getCurrentLevelStatus(
           roomNumber,
           gameId,
           parseInt(updatedData.CurrentLevel),
         );
-        if (data) {
-          await updateGameInitiatedRecord("Participant", id, updatedData);
-          return { ...updatedData, started: data };
-        } else {
-          return { ...updatedData, started: data };
-        }
+
+        await updateGameInitiatedRecord("Participant", id, updatedData);
+        return { ...updatedData, started: data };
       }),
     );
     const playerClick = true;
@@ -134,7 +142,9 @@ const updateRound = async (clientData, wss) => {
       roomNumber,
       playerClick,
     };
-    wss.sockets.emit("updatelevel", res);
+    if (resultsSubmission != "Each member does  their own submission") {
+      wss.sockets.emit("updatelevel", res);
+    }
 
     return {
       success: true,
@@ -167,20 +177,6 @@ const getCurrentLevelStatus = async (roomNumber, gameId, level) => {
     throw error;
   }
 };
-
-function createUpdatedData(data) {
-  if (!data || !data.id || !data.fields || !data.fields.CurrentLevel) {
-    return null;
-  }
-  const { id, fields } = data;
-  const currentLevel = String(Number(fields.CurrentLevel) + 1);
-
-  const updatedData = {
-    CurrentLevel: currentLevel,
-  };
-
-  return { id, updatedData };
-}
 
 const formatAndReturnUpdatedData = (records, level) => {
   const updatedData = records.map((record) => ({

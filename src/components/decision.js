@@ -121,7 +121,6 @@ const storeAnsweres = async (clientData, wss) => {
   const pdfname = `${sheetID}.pdf`;
   await getPDF(sheetID, pdfname);
   const result = await getChart(pdfname, parseInt(level));
-
   sendEmailWithPDF(email, name, result);
 
   try {
@@ -148,7 +147,10 @@ const storeAnsweres = async (clientData, wss) => {
       let response = await fetchWithCondition("Participant", condition, filed);
       updatedParticipants = await Promise.all(
         response.map(async (participant) => {
-          const { id, updatedData } = createUpdatedData(participant);
+          const { id, updatedData } = createUpdatedData(
+            participant.id,
+            participant.fields,
+          );
           const { data } = await getCurrentLevelStatus(
             roomNumber,
             gameId,

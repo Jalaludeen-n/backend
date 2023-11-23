@@ -26,7 +26,6 @@ const {
   extractFieldsForMember,
 } = require("../helpers/helper");
 
-const { fetchRolesAutoSelection } = require("./airtable/condition");
 const { getChart } = require("../helpers/pdfConverter");
 
 const startGame = async (data) => {
@@ -259,7 +258,19 @@ const selectRole = async (data) => {
       response[0].id,
       formattedData,
     );
+    let submit = true;
+    if (data.resultsSubmission === "Only one peson can submit group answer") {
+      const condition = `AND({GameID} = "${data.gameId}",{Role} = "${data.role}",{Submit} = "1")`;
+      const fields = ["Role", "Submit"];
+      const submitRole = await fetchWithCondition("Role", condition, fields);
+      if (submitRole) {
+        submit = true;
+      } else {
+        submit = false;
+      }
+    }
     return {
+      data: submit,
       success: true,
       message: "Role updated",
     };

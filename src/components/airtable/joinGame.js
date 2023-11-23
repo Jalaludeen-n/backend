@@ -77,7 +77,6 @@ const joinGame = async (data) => {
     await checkAndIncrementGroupSize(GameID, data.roomNumber, data.group);
 
     let role = null;
-
     const {
       RolesAutoSelection,
       ResultsSubmission,
@@ -111,7 +110,11 @@ const joinGame = async (data) => {
 
     const fields = roleSelectionResponse[0].fields;
 
-    const GoogleSheetID = await handleResultsSubmission(fields, data);
+    const { GoogleSheetID, submit } = await handleResultsSubmission(
+      fields,
+      data,
+      role,
+    );
     const fileName = `${GameName}_GameInstruction.pdf`;
 
     try {
@@ -129,6 +132,8 @@ const joinGame = async (data) => {
         role,
         roleAutoAssigned,
         gameInstruction,
+        submit,
+        level: 0,
       };
 
       return {
@@ -149,22 +154,33 @@ const joinGame = async (data) => {
   }
 };
 
-const handleResultsSubmission = async (fields, data) => {
-  if (fields.ResultsSubmission === "Each member does  their own submission") {
+const handleResultsSubmission = async (fields, data, role) => {
+  if (fields.ResultsSubmission == "Each member does  their own submission") {
     const sheetName = `${data.group}_${data.name}`;
     const sheetID = extractSpreadsheetId(fields.GoogleSheet);
-    const copySheetLink = await createCopySheet(sheetID, sheetName);
+    const GoogleSheetID = await createCopySheet(sheetID, sheetName);
     await createIndividualSheet(
       data.email,
       data.roomNumber,
       data.group,
-      copySheetLink,
+      GoogleSheetID,
     );
-    return copySheetLink;
+    return { GoogleSheetID, submit: true };
   } else if (
-    fields.ResultsSubmission === "Each group member can submit  group answer" ||
-    fields.ResultsSubmission === "Only one peson can submit group answer"
+    fields.ResultsSubmission == "Each group member can submit group answer" ||
+    fields.ResultsSubmission == "Only one person can submit group answer"
   ) {
+    let submit = true;
+    if (
+      fields.ResultsSubmission == "Only one person can submit group answer" &&
+      role
+    ) {
+      const condition = `AND({GameID} = "${GameID}",{RoomNumber} = "${data.roomNumber}",{Role} = "${role}",{Submit} = "1")`;
+      const fields = ["Role", "Submit"];
+      const submitRole = await fetchWithCondition("Role", condition, fields);
+      submit = !!submitRole; // Set submit based on the presence of submitRole
+    }
+
     const groupSheetResponse = await fetchGroupSheetResponse(
       data.roomNumber,
       data.group,
@@ -173,12 +189,14 @@ const handleResultsSubmission = async (fields, data) => {
     if (!groupSheetResponse) {
       const sheetName = `${data.groupName}_${data.name}`;
       const sheetID = extractSpreadsheetId(fields.GoogleSheet);
-      const copySheetLink = await createCopySheet(sheetID, sheetName);
+      const GoogleSheetID = await createCopySheet(sheetID, sheetName);
 
-      await createGroupSheet(data.roomNumber, data.group, copySheetLink);
-      return copySheetLink;
+      await createGroupSheet(data.roomNumber, data.group, GoogleSheetID);
+      return { GoogleSheetID, submit };
+    } else {
+      const GoogleSheetID = groupSheetResponse[0].fields.GoogleSheetID;
+      return { GoogleSheetID, submit };
     }
-    return groupSheetResponse[0].fields.GoogleSheetID;
   }
 };
 
