@@ -108,9 +108,10 @@ const test = async () => {
 };
 async function waitForPDFDownload(sheetID, pdfname, level) {
   let downloadAttempts = 0;
-
   const tryDownloadAndConvert = async () => {
     try {
+      console.log("inside tryDownloadAndConvert");
+      console.log("calling getPdf");
       await getPDF(sheetID, pdfname);
       console.log("PDF download successful");
 
@@ -156,6 +157,7 @@ const storeAnsweres = async (clientData, wss) => {
     name,
   } = clientData;
   const pdfname = `${sheetID}.pdf`;
+  console.log("calling waitForPDFDownload");
   const result = waitForPDFDownload(sheetID, pdfname, parseInt(level));
   sendEmailWithPDF(email, name, result);
 
