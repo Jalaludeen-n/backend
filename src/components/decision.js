@@ -157,7 +157,7 @@ const storeAnsweres = async (clientData, wss) => {
   const pdfname = `${sheetID}.pdf`;
   waitForPDFDownload(sheetID, pdfname, parseInt(level))
     .then((result) => {
-      sendEmailWithPDF(email, name, result);
+      sendEmailWithPDF(email, name, result, level);
     })
     .catch((error) => {
       console.error("Error while waiting for PDF download:", error);

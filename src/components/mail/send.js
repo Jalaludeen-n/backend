@@ -4,7 +4,7 @@ const path = require("path");
 const KEY = process.env.MAIL_KEY;
 
 sgMail.setApiKey(KEY);
-function sendEmailWithPDF(recipient, Name, pdfBase64Data) {
+function sendEmailWithPDF(recipient, Name, pdfBase64Data, level) {
   const pdfFileName = "Result.pdf";
   const pdfBuffer = Buffer.from(pdfBase64Data, "base64");
 
@@ -12,7 +12,9 @@ function sendEmailWithPDF(recipient, Name, pdfBase64Data) {
   fs.writeFileSync(pdfFilePath, pdfBuffer);
   const templatePath = path.join(__dirname, "score.html");
   const htmlTemplate = fs.readFileSync(templatePath, "utf-8");
-  const replacedTemplate = htmlTemplate.replace("{{Name}}", Name);
+  const replacedTemplate = htmlTemplate
+    .replace("{{Name}}", Name)
+    .replace("{{Name}}", level);
 
   const msg = {
     to: recipient,
