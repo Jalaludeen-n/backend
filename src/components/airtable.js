@@ -460,7 +460,7 @@ const getScore = async (data) => {
     let response = await fetchWithCondition("Games", condition, filed);
     const submissionType = response[0].fields.ResultsSubmission;
     let sheetID;
-    if (submissionType == "Each member does  their own submission") {
+    if (submissionType == "Each member does their own submission") {
       let filed = ["GoogleSheetID"];
       let condition = `AND({ParticipantEmail} = "${email}",{RoomNumber} = "${roomNumber}",{GroupName} = "${groupName}")`;
       let response = await fetchWithCondition(

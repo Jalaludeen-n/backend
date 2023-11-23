@@ -83,6 +83,7 @@ const joinGame = async (data) => {
       GameName,
       NumberOfRounds,
       ScoreVisibilityForPlayers,
+      IndividualInstructionsPerRound,
       Date,
     } = roleSelectionResponse[0].fields;
     let roleAutoAssigned = false;
@@ -115,6 +116,7 @@ const joinGame = async (data) => {
       data,
       role,
     );
+
     const fileName = `${GameName}_GameInstruction.pdf`;
 
     try {
@@ -134,6 +136,7 @@ const joinGame = async (data) => {
         gameInstruction,
         submit,
         level: 0,
+        IndividualInstructionsPerRound,
       };
 
       return {
@@ -155,7 +158,7 @@ const joinGame = async (data) => {
 };
 
 const handleResultsSubmission = async (fields, data, role) => {
-  if (fields.ResultsSubmission == "Each member does  their own submission") {
+  if (fields.ResultsSubmission == "Each member does their own submission") {
     const sheetName = `${data.group}_${data.name}`;
     const sheetID = extractSpreadsheetId(fields.GoogleSheet);
     const GoogleSheetID = await createCopySheet(sheetID, sheetName);
@@ -166,10 +169,7 @@ const handleResultsSubmission = async (fields, data, role) => {
       GoogleSheetID,
     );
     return { GoogleSheetID, submit: true };
-  } else if (
-    fields.ResultsSubmission == "Each group member can submit group answer" ||
-    fields.ResultsSubmission == "Only one person can submit group answer"
-  ) {
+  } else {
     let submit;
     if (
       fields.ResultsSubmission == "Only one person can submit group answer" &&

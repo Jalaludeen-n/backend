@@ -51,7 +51,12 @@ const startLevel = async (data, wss) => {
 
 const getRoundPdf = async (data) => {
   try {
-    const fileName = `${data.GameName}_Level${data.level}.pdf`;
+    let fileName;
+    if (data.individualInstructionsPerRound) {
+      fileName = `${data.GameName}_${data.role}_Level${data.level}.pdf`;
+    } else {
+      fileName = `${data.GameName}_Level${data.level}.pdf`;
+    }
     const gameInstruction = await getFile(fileName);
     return {
       success: true,
@@ -112,7 +117,7 @@ const updateRound = async (clientData, wss) => {
   try {
     let filed = ["GameID", "Role", "ParticipantEmail", "Name", "CurrentLevel"];
     let condition;
-    if (resultsSubmission == "Each member does  their own submission") {
+    if (resultsSubmission == "Each member does their own submission") {
       condition = `AND({GroupName} = "${groupName}", {GameID} = "${gameId}", {RoomNumber} = "${roomNumber}", {ParticipantEmail} = "${email}")`;
     } else {
       condition = `AND({GroupName} = "${groupName}", {GameID} = "${gameId}", {RoomNumber} = "${roomNumber}")`;
@@ -145,7 +150,7 @@ const updateRound = async (clientData, wss) => {
       roomNumber,
       playerClick,
     };
-    if (resultsSubmission != "Each member does  their own submission") {
+    if (resultsSubmission != "Each member does their own submission") {
       wss.sockets.emit("updatelevel", res);
     }
     console.log("update round");

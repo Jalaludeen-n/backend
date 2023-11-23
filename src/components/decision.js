@@ -69,7 +69,7 @@ const getIndividualResult = async (dataFromClient) => {
     let response = await fetchWithCondition("Games", condition, filed);
     const submissionType = response[0].fields.ResultsSubmission;
     let sheetID;
-    if (submissionType == "Each member does  their own submission") {
+    if (submissionType == "Each member does their own submission") {
       let filed = ["GoogleSheetID"];
       let condition = `AND({ParticipantEmail} = "${email}",{RoomNumber} = "${roomNumber}",{GroupName} = "${groupName}")`;
       let response = await fetchWithCondition(
@@ -172,7 +172,7 @@ const storeAnsweres = async (clientData, wss) => {
         "CurrentLevel",
       ];
       let condition;
-      if (resultsSubmission == "Each member does  their own submission") {
+      if (resultsSubmission == "Each member does their own submission") {
         condition = `AND({GroupName} = "${groupName}", {GameID} = "${gameId}", {RoomNumber} = "${roomNumber}", {ParticipantEmail} = "${email}")`;
       } else {
         condition = `AND({GroupName} = "${groupName}", {GameID} = "${gameId}", {RoomNumber} = "${roomNumber}")`;
@@ -222,7 +222,7 @@ const storeAnsweres = async (clientData, wss) => {
         email,
       };
     }
-    if (!(resultsSubmission == "Each member does  their own submission")) {
+    if (!(resultsSubmission == "Each member does their own submission")) {
       wss.sockets.emit("Movelevel", { ...res, name, email, groupName });
     }
 
