@@ -85,7 +85,10 @@ const updateIndivitualRound = async (clientData, wss) => {
       gameId,
       parseInt(updatedData.CurrentLevel),
     );
-    if (data) await updateGameInitiatedRecord("Participant", id, updatedData);
+    const newData = {
+      CurrentLevel: updatedData.CurrentLevel,
+    };
+    if (data) await updateGameInitiatedRecord("Participant", id, newData);
     const res = {
       started: data,
       level: updatedData.CurrentLevel,
@@ -107,6 +110,7 @@ function createUpdatedData(id, fields) {
   const currentLevel = String(Number(fields.CurrentLevel) + 1);
   const updatedData = {
     CurrentLevel: currentLevel,
+    email: fields.ParticipantEmail,
   };
   return { id, updatedData };
 }

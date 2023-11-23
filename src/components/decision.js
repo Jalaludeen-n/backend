@@ -155,9 +155,13 @@ const storeAnsweres = async (clientData, wss) => {
     name,
   } = clientData;
   const pdfname = `${sheetID}.pdf`;
-  console.log("calling waitForPDFDownload");
-  const result = waitForPDFDownload(sheetID, pdfname, parseInt(level));
-  sendEmailWithPDF(email, name, result);
+  waitForPDFDownload(sheetID, pdfname, parseInt(level))
+    .then((result) => {
+      sendEmailWithPDF(email, name, result);
+    })
+    .catch((error) => {
+      console.error("Error while waiting for PDF download:", error);
+    });
 
   try {
     let res;
@@ -192,13 +196,14 @@ const storeAnsweres = async (clientData, wss) => {
             gameId,
             parseInt(updatedData.CurrentLevel),
           );
-
-          await updateGameInitiatedRecord("Participant", id, updatedData);
+          const newData = {
+            CurrentLevel: updatedData.CurrentLevel,
+          };
+          await updateGameInitiatedRecord("Participant", id, newData);
           return { ...updatedData, started: data, completed: false };
         }),
       );
-
-      res = updatedParticipants[0];
+      res = findObjectByEmail(email, updatedParticipants);
     } else {
       let filed = ["CurrentLevel", "Role"];
       let condition = `AND({RoomNumber} = "${roomNumber}",{GroupName} = "${groupName}")`;
@@ -226,9 +231,6 @@ const storeAnsweres = async (clientData, wss) => {
       wss.sockets.emit("Movelevel", { ...res, name, email, groupName });
     }
 
-    console.log("store answere");
-    console.log(res);
-
     return {
       data: res,
       success: true,
@@ -239,6 +241,9 @@ const storeAnsweres = async (clientData, wss) => {
     throw error;
   }
 };
+function findObjectByEmail(email, array) {
+  return array.find((obj) => obj.email === email);
+}
 function allFieldsCompleted(records, lastLevel) {
   for (const record of records) {
     const currentLevel = parseInt(record.fields["CurrentLevel"]);
