@@ -258,8 +258,8 @@ const selectRole = async (data) => {
       response[0].id,
       formattedData,
     );
-    let submit = true;
-    if (data.resultsSubmission === "Only one peson can submit group answer") {
+    let submit;
+    if (data.resultsSubmission === "Only one person can submit group answer") {
       const condition = `AND({GameID} = "${data.gameId}",{Role} = "${data.role}",{Submit} = "1")`;
       const fields = ["Role", "Submit"];
       const submitRole = await fetchWithCondition("Role", condition, fields);
@@ -469,10 +469,7 @@ const getScore = async (data) => {
         filed,
       );
       sheetID = response[0].fields.GoogleSheetID;
-    } else if (
-      submissionType == "Each group member can submit  group answer" ||
-      submissionType == "Only one peson can submit group answer"
-    ) {
+    } else {
       let filed = ["GoogleSheetID"];
       let condition = `AND({RoomNumber} = "${data.roomNumber}",{GroupName} = "${data.groupName}")`;
       let response = await fetchWithCondition("GroupSheet", condition, filed);
