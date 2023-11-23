@@ -12,6 +12,8 @@ const {
 const { getCurrentLevelStatus, createUpdatedData } = require("./level/level");
 const { sendEmailWithPDF } = require("./mail/send");
 
+const MAX_DOWNLOAD_RETRIES = 3;
+
 const getQustions = async (data) => {
   try {
     const qustions = await fetchQustions(data.sheetID, data.level);
@@ -104,6 +106,41 @@ const test = async () => {
   //   .then((outputPath) => console.log("PDF saved to:", outputPath))
   //   .catch((error) => console.error("Error:", error));
 };
+async function waitForPDFDownload(sheetID, pdfname, level) {
+  let downloadAttempts = 0;
+
+  const tryDownloadAndConvert = async () => {
+    try {
+      await getPDF(sheetID, pdfname);
+      console.log("PDF download successful");
+
+      console.log("Waiting for 1 second...");
+
+      await new Promise((resolve) => {
+        setTimeout(() => {
+          resolve();
+        }, 1000);
+      });
+      console.log("converting pdf chart...");
+      const result = await getChart(pdfname, parseInt(level));
+
+      return result;
+    } catch (error) {
+      console.error("Error converting chart:", error);
+
+      downloadAttempts++;
+      if (downloadAttempts < MAX_DOWNLOAD_RETRIES) {
+        console.log(`Retrying PDF download... Attempt ${downloadAttempts}`);
+        return tryDownloadAndConvert();
+      } else {
+        console.error(`Exceeded maximum download attempts.`);
+        throw new Error("Failed after multiple attempts");
+      }
+    }
+  };
+
+  return tryDownloadAndConvert();
+}
 
 const storeAnsweres = async (clientData, wss) => {
   const {
@@ -119,12 +156,7 @@ const storeAnsweres = async (clientData, wss) => {
     name,
   } = clientData;
   const pdfname = `${sheetID}.pdf`;
-
-  await getPDF(sheetID, pdfname);
-  console.log("got pdf");
-  console.log("converting pdf char...........");
-  const result = await getChart(pdfname, parseInt(level));
-  console.log("converting pdf is done...........");
+  const result = waitForPDFDownload(sheetID, pdfname, parseInt(level));
   sendEmailWithPDF(email, name, result);
 
   try {
