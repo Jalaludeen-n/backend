@@ -138,23 +138,36 @@ const convertToPDF = async (spreadsheetId, pdfFileName) => {
 
     const dest = fs.createWriteStream(path.join(pdfDirectory, pdfFileName));
 
+    response.data
+      .on("end", () => {
+        console.log(`PDF Downloaded from Google: ${pdfFileName}`);
+        if (!fs.existsSync(path.join(pdfDirectory, pdfFileName))) {
+          console.error("File not saved properly");
+        }
+      })
+      .on("error", (err) => {
+        console.error("Error on downloading:", err);
+      })
+      .pipe(dest);
+
+    dest.on("error", (err) => {
+      console.error("Error writing file:", err);
+    });
+
     return new Promise((resolve, reject) => {
-      response.data
-        .on("end", () => {
-          console.log(`pdf Downloaded from google ${pdfFileName}`);
-          resolve(); // Resolve the Promise when the download completes
-        })
-        .on("error", (err) => {
-          console.error("Error on downloading:", err);
-          reject(err); // Reject if there's an error during download
-        })
-        .pipe(dest);
+      dest.on("finish", () => {
+        resolve(); // Resolve the Promise when the download completes
+      });
+      dest.on("error", (err) => {
+        reject(err); // Reject if there's an error during download
+      });
     });
   } catch (err) {
-    console.error("Error: in google pdf ", err);
+    console.error("Error in Google PDF export:", err);
     throw err; // Throw any error that occurred during the process
   }
 };
+
 async function getStoredAnswers(fileID, name, level) {
   try {
     await jwtClient.authorize();
