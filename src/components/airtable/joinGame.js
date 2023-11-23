@@ -170,7 +170,7 @@ const handleResultsSubmission = async (fields, data, role) => {
     );
     return { GoogleSheetID, submit: true };
   } else {
-    let submit;
+    let submit = true;
     if (
       fields.ResultsSubmission == "Only one person can submit group answer" &&
       role
@@ -179,9 +179,7 @@ const handleResultsSubmission = async (fields, data, role) => {
       const condition = `AND({GameID} = "${GameID}",{RoomNumber} = "${data.roomNumber}",{Role} = "${role}",{Submit} = "1")`;
       const fields = ["Role", "Submit"];
       const submitRole = await fetchWithCondition("Role", condition, fields);
-      if (submitRole) submit = true;
-    } else {
-      submit = true;
+      if (!submitRole) submit = false;
     }
 
     const groupSheetResponse = await fetchGroupSheetResponse(
