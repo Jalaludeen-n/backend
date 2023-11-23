@@ -190,6 +190,9 @@ const storeAnsweres = async (clientData, wss) => {
       wss.sockets.emit("Movelevel", { ...res, name, email, groupName });
     }
 
+    console.log("store answere");
+    console.log(res);
+
     return {
       data: res,
       success: true,

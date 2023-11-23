@@ -85,6 +85,9 @@ const updateIndivitualRound = async (clientData, wss) => {
       started: data,
       level: updatedData.CurrentLevel,
     };
+
+    console.log("update indivitual record");
+    console.log(res);
     return {
       success: true,
       data: res,
@@ -145,6 +148,8 @@ const updateRound = async (clientData, wss) => {
     if (resultsSubmission != "Each member does  their own submission") {
       wss.sockets.emit("updatelevel", res);
     }
+    console.log("update round");
+    console.log(res);
 
     return {
       success: true,
