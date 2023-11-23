@@ -119,8 +119,12 @@ const storeAnsweres = async (clientData, wss) => {
     name,
   } = clientData;
   const pdfname = `${sheetID}.pdf`;
+
   await getPDF(sheetID, pdfname);
+  console.log("got pdf");
+  console.log("converting pdf char...........");
   const result = await getChart(pdfname, parseInt(level));
+  console.log("converting pdf is done...........");
   sendEmailWithPDF(email, name, result);
 
   try {

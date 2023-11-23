@@ -141,17 +141,17 @@ const convertToPDF = async (spreadsheetId, pdfFileName) => {
     return new Promise((resolve, reject) => {
       response.data
         .on("end", () => {
-          console.log(`Downloaded ${pdfFileName}`);
+          console.log(`pdf Downloaded from google ${pdfFileName}`);
           resolve(); // Resolve the Promise when the download completes
         })
         .on("error", (err) => {
-          console.error("Error:", err);
+          console.error("Error on downloading:", err);
           reject(err); // Reject if there's an error during download
         })
         .pipe(dest);
     });
   } catch (err) {
-    console.error("Error:", err);
+    console.error("Error: in google pdf ", err);
     throw err; // Throw any error that occurred during the process
   }
 };
