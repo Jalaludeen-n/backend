@@ -159,9 +159,16 @@ const storeAnsweresInSheet = async (ID, values, level) => {
   await updateCellValues(ID, values, level);
 };
 
-async function getPDF(id, name) {
-  await convertToPDF(id, name);
-}
+const getPDF = async (id, name) => {
+  try {
+    await convertToPDF(id, name);
+    console.log(`PDF generation complete for ${name}`);
+    return true;
+  } catch (err) {
+    console.error("Error generating PDF:", err);
+    return false;
+  }
+};
 async function deleteAllPDF() {
   await deleteAllFiles();
 }

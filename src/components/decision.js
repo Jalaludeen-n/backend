@@ -107,20 +107,18 @@ const test = async () => {
   //   .catch((error) => console.error("Error:", error));
 };
 async function waitForPDFDownload(sheetID, pdfname, level) {
+  console.log("calling getPdf");
+  await getPDF(sheetID, pdfname);
   let downloadAttempts = 0;
   const tryDownloadAndConvert = async () => {
     try {
       console.log("inside tryDownloadAndConvert");
-      console.log("calling getPdf");
-      await getPDF(sheetID, pdfname);
-      console.log("PDF download successful");
-
       console.log("Waiting for 1 second...");
 
       await new Promise((resolve) => {
         setTimeout(() => {
           resolve();
-        }, 1000);
+        }, 2000);
       });
       console.log("converting pdf chart...");
       const result = await getChart(pdfname, parseInt(level));
