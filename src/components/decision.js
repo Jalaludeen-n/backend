@@ -100,47 +100,49 @@ const getIndividualResult = async (dataFromClient) => {
 };
 
 const test = async () => {
-  await getPDF("ds", "1bsXUHh3uC65CYvxvdrTwby9Rj-SAqdRKIPskLaQgXbU.pdf");
-
+  // await getP/DF("ds", "1bsXUHh3uC65CYvxvdrTwby9Rj-SAqdRKIPskLaQgXbU.pdf");
   // getChart("1bsXUHh3uC65CYvxvdrTwby9Rj-SAqdRKIPskLaQgXbU.pdf", 1)
   //   .then((outputPath) => console.log("PDF saved to:", outputPath))
   //   .catch((error) => console.error("Error:", error));
 };
+// async function waitForPDFDownload(sheetID, pdfname, level) {
+//   console.log("calling getPdf");
+//   await getPDF(sheetID, pdfname);
+//   let downloadAttempts = 0;
+//   const tryDownloadAndConvert = async () => {
+//     try {
+//       console.log("inside tryDownloadAndConvert");
+//       console.log("Waiting for 1 second...");
+
+//       await new Promise((resolve) => {
+//         setTimeout(() => {
+//           resolve();
+//         }, 2000);
+//       });
+//       console.log("converting pdf chart...");
+//       const result = await getChart(pdfname, parseInt(level));
+
+//       return result;
+//     } catch (error) {
+//       console.error("Error converting chart:", error);
+
+//       downloadAttempts++;
+//       if (downloadAttempts < MAX_DOWNLOAD_RETRIES) {
+//         console.log(`Retrying PDF download... Attempt ${downloadAttempts}`);
+//         return tryDownloadAndConvert();
+//       } else {
+//         console.error(`Exceeded maximum download attempts.`);
+//         throw new Error("Failed after multiple attempts");
+//       }
+//     }
+//   };
+
+//   return tryDownloadAndConvert();
+// }
 async function waitForPDFDownload(sheetID, pdfname, level) {
-  console.log("calling getPdf");
-  await getPDF(sheetID, pdfname);
-  let downloadAttempts = 0;
-  const tryDownloadAndConvert = async () => {
-    try {
-      console.log("inside tryDownloadAndConvert");
-      console.log("Waiting for 1 second...");
-
-      await new Promise((resolve) => {
-        setTimeout(() => {
-          resolve();
-        }, 2000);
-      });
-      console.log("converting pdf chart...");
-      const result = await getChart(pdfname, parseInt(level));
-
-      return result;
-    } catch (error) {
-      console.error("Error converting chart:", error);
-
-      downloadAttempts++;
-      if (downloadAttempts < MAX_DOWNLOAD_RETRIES) {
-        console.log(`Retrying PDF download... Attempt ${downloadAttempts}`);
-        return tryDownloadAndConvert();
-      } else {
-        console.error(`Exceeded maximum download attempts.`);
-        throw new Error("Failed after multiple attempts");
-      }
-    }
-  };
-
-  return tryDownloadAndConvert();
+  return await getPDF(sheetID, pdfname, parseInt(level));
+  result = await getChart(pdfname, parseInt(level));
 }
-
 const storeAnsweres = async (clientData, wss) => {
   const {
     sheetID,
@@ -226,6 +228,7 @@ const storeAnsweres = async (clientData, wss) => {
         groupName,
         email,
       };
+      wss.sockets.emit("newplayer", res);
     }
     if (!(resultsSubmission == "Each member does their own submission")) {
       wss.sockets.emit("Movelevel", { ...res, name, email, groupName });

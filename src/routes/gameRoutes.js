@@ -14,6 +14,7 @@ const {
   gameCompleted,
   getScore,
   getMember,
+  fetchGroupStatus,
 } = require("../components/airtable");
 
 const { joinGame } = require("./../components/airtable/joinGame");
@@ -28,7 +29,7 @@ const upload = multer({ storage });
 router.post("/join", async (req, res) => {
   try {
     checkRequestBodyAndDataField(req, res);
-    const result = await joinGame(JSON.parse(req.body.data));
+    const result = await joinGame(JSON.parse(req.body.data), req.wss);
     res.header("Content-Type", "application/json");
     res.status(200).json(result);
   } catch (error) {
@@ -58,7 +59,7 @@ router.post("/new", upload.array("pdf"), async (req, res) => {
 });
 router.get("/test", async (req, res) => {
   try {
-    await test();
+    await fetchGroupStatus();
     res.status(200);
   } catch (error) {
     console.error("Error:", error);
@@ -124,6 +125,16 @@ router.post("/players", async (req, res) => {
   }
 });
 router.get("/groups", async (req, res) => {
+  try {
+    const parsedValue = req.query;
+    const data = await fetchGroupDetails(parsedValue);
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
+router.get("/group-status", async (req, res) => {
   try {
     const parsedValue = req.query;
     const data = await fetchGroupDetails(parsedValue);

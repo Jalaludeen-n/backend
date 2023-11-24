@@ -337,7 +337,82 @@ const groupsWithHighestLevel = async (queryResult, totalLevel) => {
     throw error;
   }
 };
+function getStatusArray(arr, level) {
+  const groupMap = {};
 
+  arr.forEach((obj) => {
+    const groupName = obj.fields.GroupName;
+    const currentLevel = obj.fields.CurrentLevel;
+
+    if (!groupMap[groupName]) {
+      groupMap[groupName] = Array(level).fill("not started");
+    }
+
+    if (currentLevel === "completed") {
+      groupMap[groupName][parseInt(level)] = "completed";
+    } else {
+      const parsedLevel = parseInt(currentLevel);
+      groupMap[groupName][parsedLevel] = "in progress";
+    }
+  });
+
+  Object.keys(groupMap).forEach((group) => {
+    groupMap[group] =
+      groupMap[group] &&
+      groupMap[group].map((arr) => {
+        console.log("__________");
+        console.log(arr);
+        const hasCompleted = arr.some((status) => status === "completed");
+        const hasInProgress = arr.some((status) => status === "inprogress");
+
+        if (hasCompleted) {
+          const firstCompletedIndex = arr.findIndex(
+            (status) => status === "completed",
+          );
+          return arr.map((status, index) =>
+            index < firstCompletedIndex ? "completed" : status,
+          );
+        } else if (hasInProgress) {
+          const inProgressIndex = arr.findIndex(
+            (status) => status === "inprogress",
+          );
+          return arr.map((status, index) =>
+            index <= inProgressIndex ? "inprogress" : "not started",
+          );
+        } else {
+          return arr.map(() => "not started");
+        }
+      });
+  });
+
+  return result;
+}
+const fetchGroupStatus = async () => {
+  // const { RoomNumber, GameID } = dataFromClient;
+
+  const RoomNumber = "WHZR9F5Y";
+  const GameID = "LPB1RA6";
+  try {
+    let filed = ["CurrentLevel", "GroupName"];
+    let condition = `AND({GameID} = "${GameID}", {RoomNumber} = "${RoomNumber}")`;
+    let participant = await fetchWithCondition("Participant", condition, filed);
+    condition = `{GameID} = "${GameID}"`;
+    filed = ["NumberOfRounds"];
+    response = await fetchWithCondition("Games", condition, filed);
+
+    const res = getStatusArray(participant, response[0].fields.NumberOfRounds);
+    console.log(res);
+    console.log(res);
+    return {
+      success: true,
+      data: "ds",
+      Message: "Data fetched",
+    };
+  } catch (error) {
+    console.error("Error fetching group details", error);
+    throw error;
+  }
+};
 const fetchGroupDetails = async (dataFromClient) => {
   try {
     let filed = ["GameName", "NumberOfRounds"];
@@ -550,6 +625,7 @@ module.exports = {
   gameCompleted,
   getScore,
   getMember,
+  fetchGroupStatus,
 };
 
 // const isLevelStarted = (records, level) => {

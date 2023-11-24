@@ -44,7 +44,7 @@ const checkRequiredParams = (data) => {
   return null;
 };
 
-const joinGame = async (data) => {
+const joinGame = async (data, wss) => {
   try {
     const requiredParamError = checkRequiredParams(data);
     if (requiredParamError) {
@@ -138,7 +138,7 @@ const joinGame = async (data) => {
         level: 0,
         IndividualInstructionsPerRound,
       };
-
+      wss.sockets.emit("newplayer", responseData);
       return {
         success: true,
         message: TEXT_MESSAGES.JOIN_SUCCESS,

@@ -1,3 +1,4 @@
+const { error } = require("pdf-lib");
 const {
   createCopy,
   deleteAllFiles,
@@ -8,6 +9,7 @@ const {
   getStoredAnswers,
   fetchStoredQustionsAndAnswers,
 } = require("../controller/google");
+const { getChart } = require("../helpers/pdfConverter");
 function formatData(data) {
   const formattedData = [];
   let currentQuestion = {};
@@ -159,16 +161,15 @@ const storeAnsweresInSheet = async (ID, values, level) => {
   await updateCellValues(ID, values, level);
 };
 
-const getPDF = async (id, name) => {
-  try {
-    await convertToPDF(id, name);
-    console.log(`PDF generation complete for ${name}`);
-    return true;
-  } catch (err) {
-    console.error("Error generating PDF:", err);
-    return false;
-  }
+const getPDF = async (id, name, level) => {
+  return convertToPDF(id, name)
+    .then(() => getChart(name, level))
+    .catch((err) => {
+      console.error("Error generating PDF:", err);
+      return false;
+    });
 };
+
 async function deleteAllPDF() {
   await deleteAllFiles();
 }
