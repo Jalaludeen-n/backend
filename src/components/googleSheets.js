@@ -162,12 +162,7 @@ const storeAnsweresInSheet = async (ID, values, level) => {
 };
 
 const getPDF = async (id, name, level) => {
-  return convertToPDF(id, name)
-    .then(() => getChart(name, level))
-    .catch((err) => {
-      console.error("Error generating PDF:", err);
-      return false;
-    });
+  await convertToPDF(id, name);
 };
 
 async function deleteAllPDF() {
