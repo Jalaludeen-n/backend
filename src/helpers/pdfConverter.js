@@ -7,13 +7,15 @@ const getChart = async (name, pageNumber) => {
     const pdfFilePath = path.join(__dirname, "../fullSheet", name);
     const pdfData = await fs.readFile(pdfFilePath);
     const pdfDoc = await PDFDocument.load(pdfData);
+    const count = pdfDoc.getPageCount();
+    const number = parseInt(pageNumber);
 
-    if (pageNumber < 1 || pageNumber > pdfDoc.getPageCount()) {
+    if (number > pdfDoc.getPageCount()) {
       throw new Error("Invalid page number");
     }
 
     const newPdfDoc = await PDFDocument.create();
-    const [copiedPage] = await newPdfDoc.copyPages(pdfDoc, [pageNumber - 1]);
+    const [copiedPage] = await newPdfDoc.copyPages(pdfDoc, [number - 1]);
     const originalWidth = copiedPage.getWidth();
     const originalHeight = copiedPage.getHeight();
     const cropBox = [50, 380, originalWidth - 100, originalHeight - 435];

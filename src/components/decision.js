@@ -47,7 +47,7 @@ const getResult = async (dataFromClient) => {
   try {
     const { level, sheetID } = dataFromClient;
     const name = `${sheetID}.pdf`;
-    const result = await getChart(name, level - 1);
+    const result = await getChart(name, parseInt(level) - 1);
 
     return {
       success: true,
@@ -120,7 +120,7 @@ async function waitForPDFDownload(sheetID, pdfname, level) {
         }, 2000);
       });
       console.log("converting pdf chart...");
-      const result = await getChart(pdfname, parseInt(level));
+      const result = await getChart(pdfname, parseInt(level) + 1);
 
       return result;
     } catch (error) {

@@ -14,11 +14,11 @@ function sendEmailWithPDF(recipient, Name, pdfBase64Data, level) {
   const htmlTemplate = fs.readFileSync(templatePath, "utf-8");
   const replacedTemplate = htmlTemplate
     .replace("{{Name}}", Name)
-    .replace("{{Name}}", level);
+    .replace("{{Level}}", level);
 
   const msg = {
     to: recipient,
-    from: "hello@courageousteams.com",
+    from: "notifications@tomorrow.college",
     subject: `${Name}, your score`,
     text: "This is a test email with an attached PDF.",
     attachments: [
