@@ -125,26 +125,9 @@ const convertToPDF = async (spreadsheetId, pdfFileName) => {
 
     console.log(`PDF will be saved to: ${pdfPath}`);
 
-    let directoryExists = false;
-    try {
-      await access(pdfDirectory, fs.constants.R_OK | fs.constants.W_OK);
-      directoryExists = true;
-      console.log(
-        `Directory exists and has read/write permissions: ${pdfDirectory}`,
-      );
-    } catch (err) {
-      console.error(
-        `Directory does not exist or lacks read/write permissions: ${pdfDirectory}`,
-      );
-    }
-
-    if (!directoryExists) {
-      try {
-        fs.mkdirSync(pdfDirectory);
-        console.log(`Created directory: ${pdfDirectory}`);
-      } catch (err) {
-        console.error(`Error creating directory: ${pdfDirectory}`, err);
-      }
+    if (!fs.existsSync(pdfDirectory)) {
+      fs.mkdirSync(pdfDirectory);
+      console.log(`Created directory: ${pdfDirectory}`);
     }
 
     const drive = google.drive({ version: "v3", auth: jwtClient });
