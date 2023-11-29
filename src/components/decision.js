@@ -137,41 +137,6 @@ const waitForFile = async (filePath, maxAttempts = 5, interval = 2000) => {
   return false;
 };
 
-async function waitForPDFDownload(sheetID, pdfname, level) {
-  console.log("calling getPdf");
-  let downloadAttempts = 0;
-  const tryDownloadAndConvert = async () => {
-    try {
-      console.log("Waiting for 1 second...");
-
-      await new Promise((resolve) => {
-        setTimeout(() => {
-          resolve();
-        }, 2000);
-      });
-      // const result = await getChart(pdfname, parseInt(level) + 1);
-
-      return result;
-    } catch (error) {
-      console.error("Error converting chart:", error);
-
-      downloadAttempts++;
-      if (downloadAttempts < MAX_DOWNLOAD_RETRIES) {
-        console.log(`Retrying PDF download... Attempt ${downloadAttempts}`);
-        return tryDownloadAndConvert();
-      } else {
-        console.error(`Exceeded maximum download attempts.`);
-        throw new Error("Failed after multiple attempts");
-      }
-    }
-  };
-
-  return tryDownloadAndConvert();
-}
-// async function waitForPDFDownload(sheetID, pdfname, level) {
-//   return await getPDF(sheetID, pdfname, parseInt(level));
-//   result = await getChart(pdfname, parseInt(level));
-// }
 const storeAnsweres = async (clientData, wss) => {
   const {
     sheetID,
@@ -204,13 +169,6 @@ const storeAnsweres = async (clientData, wss) => {
     .catch((err) => {
       console.error("Error while waiting for file:", err);
     });
-  // waitForPDFDownload(sheetID, pdfname, parseInt(level))
-  //   .then((result) => {
-  //     sendEmailWithPDF(email, name, result, level);
-  //   })
-  //   .catch((error) => {
-  //     console.error("Error while waiting for PDF download:", error);
-  //   });
 
   try {
     let res;

@@ -40,12 +40,10 @@ function sendEmailWithPDF(recipient, Name, pdfBase64Data, level) {
     .send(msg)
     .then(() => {
       console.log("Email sent");
-      // Delete the PDF file after sending the email (optional)
       fs.unlinkSync(pdfFilePath);
     })
     .catch((error) => {
       console.error("Error while sending email:", error);
-      // Delete the PDF file in case of an error (optional)
       fs.unlinkSync(pdfFilePath);
     });
 }

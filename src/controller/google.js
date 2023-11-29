@@ -120,12 +120,8 @@ const convertToPDF = async (spreadsheetId, pdfFileName) => {
   try {
     console.log("inside convertToPDF");
 
-    // Checking if directory exists
     const pdfDirectory = path.join(__dirname, "..", "fullSheet");
     const pdfPath = path.join(pdfDirectory, pdfFileName);
-
-    console.log("path for pdf");
-    console.log(pdfDirectory);
 
     console.log(`PDF will be saved to: ${pdfPath}`);
 
@@ -151,7 +147,6 @@ const convertToPDF = async (spreadsheetId, pdfFileName) => {
       }
     }
 
-    // Writing PDF file
     const drive = google.drive({ version: "v3", auth: jwtClient });
     const pageHeight = 7;
     const pageWidth = 8.5;
@@ -191,11 +186,11 @@ const convertToPDF = async (spreadsheetId, pdfFileName) => {
     return new Promise((resolve, reject) => {
       dest.on("finish", () => {
         console.log(`PDF write finished: ${pdfFileName}`);
-        resolve(); // Resolve the Promise when the download completes
+        resolve();
       });
       dest.on("error", (err) => {
         console.error("Error writing file:", err);
-        reject(err); // Reject if there's an error during download
+        reject(err);
       });
     });
   } catch (err) {
