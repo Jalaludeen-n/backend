@@ -15,7 +15,7 @@ function sendEmailWithPDF(recipient, Name, pdfBase64Data, level) {
   const replacedTemplate = htmlTemplate
     .replace("{{Name}}", Name)
     .replace("{{Level}}", level);
-
+  console.log("PDF File written successfully.");
   const msg = {
     to: recipient,
     from: "notifications@tomorrow.college",
@@ -44,7 +44,7 @@ function sendEmailWithPDF(recipient, Name, pdfBase64Data, level) {
       fs.unlinkSync(pdfFilePath);
     })
     .catch((error) => {
-      console.error(error);
+      console.error("Error while sending email:", error);
       // Delete the PDF file in case of an error (optional)
       fs.unlinkSync(pdfFilePath);
     });
