@@ -11,6 +11,10 @@ const {
 } = require("./googleSheets");
 const { getCurrentLevelStatus, createUpdatedData } = require("./level/level");
 const { sendEmailWithPDF } = require("./mail/send");
+const fs = require("fs");
+const path = require("path");
+const util = require("util");
+const access = util.promisify(fs.access);
 
 const MAX_DOWNLOAD_RETRIES = 3;
 
@@ -105,6 +109,33 @@ const test = async () => {
   //   .then((outputPath) => console.log("PDF saved to:", outputPath))
   //   .catch((error) => console.error("Error:", error));
 };
+const checkFileExists = async (filePath) => {
+  try {
+    await access(filePath, fs.constants.F_OK);
+    console.log(`File exists at path: ${filePath}`);
+    return true;
+  } catch (err) {
+    console.error(`File does not exist at path: ${filePath}`);
+    return false;
+  }
+};
+const waitForFile = async (filePath, maxAttempts = 5, interval = 2000) => {
+  let attempts = 0;
+  while (attempts < maxAttempts) {
+    if (await checkFileExists(filePath)) {
+      return true;
+    } else {
+      attempts++;
+      console.log(
+        `File not found, attempt ${attempts}/${maxAttempts}. Waiting for ${interval}ms.`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, interval));
+    }
+  }
+  console.error(`File not found after ${maxAttempts} attempts.`);
+  return false;
+};
+
 async function waitForPDFDownload(sheetID, pdfname, level) {
   console.log("calling getPdf");
   await getPDF(sheetID, pdfname);
@@ -155,6 +186,23 @@ const storeAnsweres = async (clientData, wss) => {
     name,
   } = clientData;
   const pdfname = `${sheetID}.pdf`;
+  const pdfDirectory = path.join(__dirname, "../../fullSheet"); // Adjust the path according to your directory structure
+  const filePath = path.join(pdfDirectory, pdfname);
+
+  waitForFile(filePath)
+    .then((fileExists) => {
+      if (fileExists) {
+        console.log("File exists. Proceeding with further operations...");
+
+        const result = getChart(pdfname, parseInt(level) + 1);
+        sendEmailWithPDF(email, name, result, level);
+      } else {
+        console.log("File does not exist. Cannot proceed with operations.");
+      }
+    })
+    .catch((err) => {
+      console.error("Error while waiting for file:", err);
+    });
   // waitForPDFDownload(sheetID, pdfname, parseInt(level))
   //   .then((result) => {
   //     sendEmailWithPDF(email, name, result, level);
@@ -162,7 +210,6 @@ const storeAnsweres = async (clientData, wss) => {
   //   .catch((error) => {
   //     console.error("Error while waiting for PDF download:", error);
   //   });
-  await getPDF(sheetID, pdfname);
 
   try {
     let res;
