@@ -134,6 +134,7 @@ const convertToPDF = async (spreadsheetId, pdfFileName) => {
     const pdfDirectory = "fullSheet";
     if (!fs.existsSync(pdfDirectory)) {
       fs.mkdirSync(pdfDirectory);
+      console.log(`Created directory: ${pdfDirectory}`);
     }
 
     const dest = fs.createWriteStream(path.join(pdfDirectory, pdfFileName));
@@ -156,9 +157,11 @@ const convertToPDF = async (spreadsheetId, pdfFileName) => {
 
     return new Promise((resolve, reject) => {
       dest.on("finish", () => {
+        console.log(`PDF write finished: ${pdfFileName}`);
         resolve(); // Resolve the Promise when the download completes
       });
       dest.on("error", (err) => {
+        console.error("Error writing file:", err);
         reject(err); // Reject if there's an error during download
       });
     });
