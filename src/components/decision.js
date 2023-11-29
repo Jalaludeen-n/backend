@@ -186,7 +186,7 @@ const storeAnsweres = async (clientData, wss) => {
     name,
   } = clientData;
   const pdfname = `${sheetID}.pdf`;
-  const pdfDirectory = path.join(__dirname, "../../fullSheet"); // Adjust the path according to your directory structure
+  const pdfDirectory = path.join(__dirname, "../fullSheet"); // Adjust the path according to your directory structure
   const filePath = path.join(pdfDirectory, pdfname);
   await getPDF(sheetID, pdfname);
 
