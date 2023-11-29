@@ -121,6 +121,7 @@ const checkFileExists = async (filePath) => {
 };
 const waitForFile = async (filePath, maxAttempts = 5, interval = 2000) => {
   let attempts = 0;
+
   while (attempts < maxAttempts) {
     if (await checkFileExists(filePath)) {
       return true;
@@ -138,7 +139,6 @@ const waitForFile = async (filePath, maxAttempts = 5, interval = 2000) => {
 
 async function waitForPDFDownload(sheetID, pdfname, level) {
   console.log("calling getPdf");
-  await getPDF(sheetID, pdfname);
   let downloadAttempts = 0;
   const tryDownloadAndConvert = async () => {
     try {
@@ -188,6 +188,7 @@ const storeAnsweres = async (clientData, wss) => {
   const pdfname = `${sheetID}.pdf`;
   const pdfDirectory = path.join(__dirname, "../../fullSheet"); // Adjust the path according to your directory structure
   const filePath = path.join(pdfDirectory, pdfname);
+  await getPDF(sheetID, pdfname);
 
   waitForFile(filePath)
     .then((fileExists) => {
