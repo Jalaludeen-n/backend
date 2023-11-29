@@ -121,7 +121,7 @@ const convertToPDF = async (spreadsheetId, pdfFileName) => {
     console.log("inside convertToPDF");
 
     // Checking if directory exists
-    const pdfDirectory = "fullSheet";
+    const pdfDirectory = path.join(__dirname, "src", "fullSheet");
     const pdfPath = path.join(pdfDirectory, pdfFileName);
 
     console.log(`PDF will be saved to: ${pdfPath}`);
