@@ -115,6 +115,7 @@ const createCopy = async (fileId, fileName) => {
 
 const convertToPDF = async (spreadsheetId, pdfFileName) => {
   try {
+    console.log("inside convertToPDF");
     await jwtClient.authorize();
     const drive = google.drive({ version: "v3", auth: jwtClient });
     const pageHeight = 7;

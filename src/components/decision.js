@@ -111,7 +111,6 @@ async function waitForPDFDownload(sheetID, pdfname, level) {
   let downloadAttempts = 0;
   const tryDownloadAndConvert = async () => {
     try {
-      console.log("inside tryDownloadAndConvert");
       console.log("Waiting for 1 second...");
 
       await new Promise((resolve) => {
@@ -119,8 +118,7 @@ async function waitForPDFDownload(sheetID, pdfname, level) {
           resolve();
         }, 2000);
       });
-      console.log("converting pdf chart...");
-      const result = await getChart(pdfname, parseInt(level) + 1);
+      // const result = await getChart(pdfname, parseInt(level) + 1);
 
       return result;
     } catch (error) {
@@ -157,13 +155,14 @@ const storeAnsweres = async (clientData, wss) => {
     name,
   } = clientData;
   const pdfname = `${sheetID}.pdf`;
-  waitForPDFDownload(sheetID, pdfname, parseInt(level))
-    .then((result) => {
-      sendEmailWithPDF(email, name, result, level);
-    })
-    .catch((error) => {
-      console.error("Error while waiting for PDF download:", error);
-    });
+  // waitForPDFDownload(sheetID, pdfname, parseInt(level))
+  //   .then((result) => {
+  //     sendEmailWithPDF(email, name, result, level);
+  //   })
+  //   .catch((error) => {
+  //     console.error("Error while waiting for PDF download:", error);
+  //   });
+  await getPDF(sheetID, pdfname);
 
   try {
     let res;

@@ -162,6 +162,7 @@ const storeAnsweresInSheet = async (ID, values, level) => {
 };
 
 const getPDF = async (id, name, level) => {
+  console.log("calling getPdf");
   await convertToPDF(id, name);
 };
 
