@@ -4,6 +4,9 @@ const PRIVATE_KEY = process.env.PRIVATE_KEY.replace(/\\n/g, "\n");
 const fs = require("fs");
 const path = require("path");
 
+const util = require("util");
+const access = util.promisify(fs.access);
+
 const jwtClient = new google.auth.JWT(
   CLIENT_EMAIL,
   null,
@@ -116,7 +119,36 @@ const createCopy = async (fileId, fileName) => {
 const convertToPDF = async (spreadsheetId, pdfFileName) => {
   try {
     console.log("inside convertToPDF");
-    await jwtClient.authorize();
+
+    // Checking if directory exists
+    const pdfDirectory = "fullSheet";
+    const pdfPath = path.join(pdfDirectory, pdfFileName);
+
+    console.log(`PDF will be saved to: ${pdfPath}`);
+
+    let directoryExists = false;
+    try {
+      await access(pdfDirectory, fs.constants.R_OK | fs.constants.W_OK);
+      directoryExists = true;
+      console.log(
+        `Directory exists and has read/write permissions: ${pdfDirectory}`,
+      );
+    } catch (err) {
+      console.error(
+        `Directory does not exist or lacks read/write permissions: ${pdfDirectory}`,
+      );
+    }
+
+    if (!directoryExists) {
+      try {
+        fs.mkdirSync(pdfDirectory);
+        console.log(`Created directory: ${pdfDirectory}`);
+      } catch (err) {
+        console.error(`Error creating directory: ${pdfDirectory}`, err);
+      }
+    }
+
+    // Writing PDF file
     const drive = google.drive({ version: "v3", auth: jwtClient });
     const pageHeight = 7;
     const pageWidth = 8.5;
@@ -132,19 +164,16 @@ const convertToPDF = async (spreadsheetId, pdfFileName) => {
     const response = await drive.files.export(exportOptions, {
       responseType: "stream",
     });
-    const pdfDirectory = "fullSheet";
-    if (!fs.existsSync(pdfDirectory)) {
-      fs.mkdirSync(pdfDirectory);
-      console.log(`Created directory: ${pdfDirectory}`);
-    }
 
-    const dest = fs.createWriteStream(path.join(pdfDirectory, pdfFileName));
+    const dest = fs.createWriteStream(pdfPath);
 
     response.data
       .on("end", () => {
         console.log(`PDF Downloaded from Google: ${pdfFileName}`);
-        if (!fs.existsSync(path.join(pdfDirectory, pdfFileName))) {
+        if (!fs.existsSync(pdfPath)) {
           console.error("File not saved properly");
+        } else {
+          console.log(`File exists at path: ${pdfPath}`);
         }
       })
       .on("error", (err) => {
@@ -168,7 +197,7 @@ const convertToPDF = async (spreadsheetId, pdfFileName) => {
     });
   } catch (err) {
     console.error("Error in Google PDF export:", err);
-    throw err; // Throw any error that occurred during the process
+    throw err;
   }
 };
 
