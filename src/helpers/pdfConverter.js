@@ -2,7 +2,12 @@ const { PDFDocument, rgb } = require("pdf-lib");
 const fs = require("fs").promises;
 const path = require("path");
 
-const getChart = async (name, pageNumber) => {
+const getChart = async (
+  name,
+  pageNumber,
+  retryCount = 3,
+  retryDelay = 5000,
+) => {
   try {
     const pdfFilePath = path.join(__dirname, "../fullSheet", name);
     const pdfData = await fs.readFile(pdfFilePath);
@@ -39,7 +44,14 @@ const getChart = async (name, pageNumber) => {
   } catch (err) {
     console.error("Error reading or processing PDF file:", err);
     console.log("Root cause:", err);
-    throw new Error(`failing getChart function `);
+
+    if (retryCount > 0) {
+      console.log(`Retrying in ${retryDelay / 1000} seconds...`);
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
+      return getChart(name, pageNumber, retryCount - 1, retryDelay);
+    } else {
+      throw new Error(`Failed after multiple attempts.`);
+    }
   }
 };
 

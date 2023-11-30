@@ -18,17 +18,17 @@ function sendEmailWithPDF(recipient, Name, pdfBase64Data, level) {
   console.log("PDF File written successfully.");
   const msg = {
     to: recipient,
-    from: "notifications@tomorrow.college",
+    from: "hello@courageousteams.com",
     subject: `${Name}, your score`,
     text: "This is a test email with an attached PDF.",
-    attachments: [
-      {
-        content: pdfBuffer.toString("base64"),
-        filename: pdfFileName,
-        type: "application/pdf",
-        disposition: "attachment",
-      },
-    ],
+    // attachments: [
+    //   {
+    //     content: pdfBuffer.toString("base64"),
+    //     filename: pdfFileName,
+    //     type: "application/pdf",
+    //     disposition: "attachment",
+    //   },
+    // ],
     html: replacedTemplate,
     // templateId: "d-6fc0287ba0134144997b3952fec0167d",
     dynamicTemplateData: {

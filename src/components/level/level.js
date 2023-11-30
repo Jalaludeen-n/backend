@@ -106,6 +106,12 @@ const updateIndivitualRound = async (clientData, wss) => {
     throw error;
   }
 };
+function createCompletedUpdatedData(id) {
+  const updatedData = {
+    CurrentLevel: "Completed",
+  };
+  return { id, updatedData };
+}
 function createUpdatedData(id, fields) {
   const currentLevel = String(Number(fields.CurrentLevel) + 1);
   const updatedData = {
@@ -211,4 +217,5 @@ module.exports = {
   getCurrentLevelStatus,
   createUpdatedData,
   updateIndivitualRound,
+  createCompletedUpdatedData,
 };

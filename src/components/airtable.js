@@ -337,75 +337,111 @@ const groupsWithHighestLevel = async (queryResult, totalLevel) => {
     throw error;
   }
 };
-function getStatusArray(arr, level) {
-  const groupMap = {};
 
-  arr.forEach((obj) => {
-    const groupName = obj.fields.GroupName;
-    const currentLevel = obj.fields.CurrentLevel;
-
-    if (!groupMap[groupName]) {
-      groupMap[groupName] = Array(level).fill("not started");
-    }
-
-    if (currentLevel === "completed") {
-      groupMap[groupName][parseInt(level)] = "completed";
-    } else {
-      const parsedLevel = parseInt(currentLevel);
-      groupMap[groupName][parsedLevel] = "in progress";
-    }
-  });
-
-  Object.keys(groupMap).forEach((group) => {
-    groupMap[group] =
-      groupMap[group] &&
-      groupMap[group].map((arr) => {
-        console.log("__________");
-        console.log(arr);
-        const hasCompleted = arr.some((status) => status === "completed");
-        const hasInProgress = arr.some((status) => status === "inprogress");
-
-        if (hasCompleted) {
-          const firstCompletedIndex = arr.findIndex(
-            (status) => status === "completed",
-          );
-          return arr.map((status, index) =>
-            index < firstCompletedIndex ? "completed" : status,
-          );
-        } else if (hasInProgress) {
-          const inProgressIndex = arr.findIndex(
-            (status) => status === "inprogress",
-          );
-          return arr.map((status, index) =>
-            index <= inProgressIndex ? "inprogress" : "not started",
-          );
-        } else {
-          return arr.map(() => "not started");
-        }
-      });
-  });
-
-  return result;
+function extractFieldsValues(arr) {
+  return arr.map((obj) => obj.fields);
 }
-const fetchGroupStatus = async () => {
-  // const { RoomNumber, GameID } = dataFromClient;
 
-  const RoomNumber = "WHZR9F5Y";
-  const GameID = "LPB1RA6";
+function generateGroupProgress(array, rounds) {
+  const groups = {};
+
+  array.forEach(({ GroupName, CurrentLevel }) => {
+    if (!groups[GroupName]) {
+      groups[GroupName] = new Array(rounds).fill("not started");
+    }
+
+    if (CurrentLevel == "completed") {
+      groups[GroupName][rounds - 1] = "completed";
+    } else {
+      const level = parseInt(CurrentLevel) - 1;
+      groups[GroupName][level] = "inprogress";
+    }
+  });
+
+  return groups;
+}
+const updateGroupProgress = (groupArray) => {
+  const lastIndex = groupArray.length - 1;
+
+  if (groupArray[lastIndex] === "inprogress") {
+    for (let i = lastIndex - 1; i >= 0; i--) {
+      groupArray[i] = "inprogress";
+    }
+  } else if (groupArray[lastIndex] === "completed") {
+    if (
+      groupArray.slice(0, lastIndex).every((value) => value === "not started")
+    ) {
+      groupArray.fill("completed");
+    } else {
+      const inprogressIndex = groupArray.lastIndexOf("inprogress");
+      for (let i = inprogressIndex; i <= lastIndex; i++) {
+        groupArray[i] = "inprogress";
+      }
+
+      if (inprogressIndex !== -1) {
+        for (let i = inprogressIndex - 1; i >= 0; i--) {
+          if (
+            groupArray[i] === "not started" &&
+            groupArray.slice(0, i).every((value) => value === "not started")
+          ) {
+            for (; i >= 0; i--) {
+              groupArray[i] = "completed";
+            }
+          } else {
+            groupArray[i] = "inprogress";
+          }
+        }
+      }
+    }
+  } else if (groupArray[lastIndex] === "not started") {
+    const inprogressIndex = groupArray.lastIndexOf("inprogress");
+    if (inprogressIndex !== -1) {
+      for (let i = inprogressIndex - 1; i >= 0; i--) {
+        if (
+          groupArray[i] === "not started" &&
+          groupArray.slice(0, i).every((value) => value === "not started")
+        ) {
+          for (; i >= 0; i--) {
+            groupArray[i] = "completed";
+          }
+        } else {
+          groupArray[i] = "inprogress";
+        }
+      }
+    }
+  }
+
+  return groupArray;
+};
+function processArrays(arraysObject) {
+  for (const groupName in arraysObject) {
+    const currentArray = arraysObject[groupName];
+    const updatedArray = updateGroupProgress(currentArray);
+    arraysObject[groupName] = updatedArray;
+  }
+
+  return arraysObject;
+}
+
+const fetchGroupStatus = async (dataFromClient) => {
+  const { RoomNumber, GameID } = dataFromClient;
+
   try {
     let filed = ["CurrentLevel", "GroupName"];
     let condition = `AND({GameID} = "${GameID}", {RoomNumber} = "${RoomNumber}")`;
     let participant = await fetchWithCondition("Participant", condition, filed);
+    const afterFilter = extractFieldsValues(participant);
     condition = `{GameID} = "${GameID}"`;
     filed = ["NumberOfRounds"];
     response = await fetchWithCondition("Games", condition, filed);
-
-    const res = getStatusArray(participant, response[0].fields.NumberOfRounds);
-    console.log(res);
-    console.log(res);
+    const onlyLevels = generateGroupProgress(
+      afterFilter,
+      response[0].fields.NumberOfRounds,
+    );
+    const outPut = processArrays(onlyLevels);
     return {
       success: true,
-      data: "ds",
+      data: { Levels: outPut, totalLevels: response[0].fields.NumberOfRounds },
       Message: "Data fetched",
     };
   } catch (error) {
@@ -505,19 +541,12 @@ function filterAndCondition(response, emailId, roomNumber) {
       throw new Error("Response data is not an array.");
     }
 
-    const filteredData = response
-      // .filter(
-      //   (item) =>
-      //     item.fields.ParticipantEmail !== emailId &&
-      //     item.fields.RoomNumber !== roomNumber,
-      // )
-      .map((item) => ({
-        Role: item.fields.Role || "Not Selected",
-        Name: item.fields.Name,
-        ParticipantEmail: item.fields.ParticipantEmail,
-        GameID: item.fields.GameID,
-      }));
-
+    const filteredData = response.map((item) => ({
+      Role: item.fields.Role || "Not Selected",
+      Name: item.fields.Name,
+      ParticipantEmail: item.fields.ParticipantEmail,
+      GameID: item.fields.GameID,
+    }));
     return filteredData;
   } catch (error) {
     console.error("Error in filterAndCondition:", error);
@@ -627,14 +656,3 @@ module.exports = {
   getMember,
   fetchGroupStatus,
 };
-
-// const isLevelStarted = (records, level) => {
-//   for (const record of records) {
-//     if (record.fields && record.fields.Level && record.fields.Status) {
-//       if (record.fields.Level === level && record.fields.Status === "Started") {
-//         return true;
-//       }
-//     }
-//   }
-//   return false;
-// };

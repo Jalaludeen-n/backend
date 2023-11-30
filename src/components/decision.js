@@ -35,7 +35,16 @@ const getQustions = async (data) => {
 const getResults = async (dataFromClient) => {
   try {
     const { level, sheetID, completed } = dataFromClient;
-    const data = await fetchQustionsAndAnswers(sheetID, level);
+    let data;
+    if (parseInt(level) != 0) {
+      data = await fetchQustionsAndAnswers(sheetID, level);
+    } else {
+      return {
+        success: true,
+        data: [],
+        message: "Data fetched",
+      };
+    }
 
     return {
       success: true,
@@ -49,9 +58,10 @@ const getResults = async (dataFromClient) => {
 };
 const getResult = async (dataFromClient) => {
   try {
-    const { level, sheetID } = dataFromClient;
-    const name = `${sheetID}.pdf`;
-    const result = await getChart(name, parseInt(level) - 1);
+    const { level, sheetID, email, name } = dataFromClient;
+    const pdfName = `${sheetID}.pdf`;
+    let result;
+    result = await getChart(pdfName, parseInt(level) - 1);
 
     return {
       success: true,
@@ -137,6 +147,18 @@ const waitForFile = async (filePath, maxAttempts = 5, interval = 2000) => {
   return false;
 };
 
+function findObjectByEmail(email, array) {
+  return array.find((obj) => obj.email === email);
+}
+function allFieldsCompleted(records, lastLevel) {
+  for (const record of records) {
+    const currentLevel = record.fields["CurrentLevel"];
+    if (currentLevel != "completed") {
+      return false;
+    }
+  }
+  return true;
+}
 const storeAnsweres = async (clientData, wss) => {
   const {
     sheetID,
@@ -150,29 +172,15 @@ const storeAnsweres = async (clientData, wss) => {
     numberOfRounds,
     name,
   } = clientData;
-  const pdfname = `${sheetID}.pdf`;
-  const pdfDirectory = path.join(__dirname, "../fullSheet"); // Adjust the path according to your directory structure
-  const filePath = path.join(pdfDirectory, pdfname);
-  await getPDF(sheetID, pdfname);
-
-  waitForFile(filePath)
-    .then((fileExists) => {
-      if (fileExists) {
-        console.log("File exists. Proceeding with further operations...");
-
-        const result = getChart(pdfname, parseInt(level));
-        sendEmailWithPDF(email, name, result, level);
-      } else {
-        console.log("File does not exist. Cannot proceed with operations.");
-      }
-    })
-    .catch((err) => {
-      console.error("Error while waiting for file:", err);
-    });
 
   try {
     let res;
     await storeAnsweresInSheet(sheetID, answers, level);
+    const pdfname = `${sheetID}.pdf`;
+    const pdfDirectory = path.join(__dirname, "../fullSheet");
+    const filePath = path.join(pdfDirectory, pdfname);
+
+    await getPDF(sheetID, pdfname);
 
     if (numberOfRounds != parseInt(level)) {
       let filed = [
@@ -212,19 +220,56 @@ const storeAnsweres = async (clientData, wss) => {
       );
       res = findObjectByEmail(email, updatedParticipants);
     } else {
-      let filed = ["CurrentLevel", "Role"];
-      let condition = `AND({RoomNumber} = "${roomNumber}",{GroupName} = "${groupName}")`;
-      let response = await fetchWithCondition("Participant", condition, filed);
-      if (allFieldsCompleted(response, level)) {
-        filed = ["Status"];
-        let condition = `AND({RoomNumber} = "${roomNumber}",{GameID} = "${gameId}")`;
-        response = await fetchWithCondition("GameInitiated", condition, filed);
-        const Id = response[0].id;
-        const updatedFields = {
-          Status: "Completed",
-        };
-        await updateGameInitiatedRecord("GameInitiated", Id, updatedFields);
+      let filed = [
+        "GameID",
+        "Role",
+        "ParticipantEmail",
+        "Name",
+        "CurrentLevel",
+      ];
+      let condition;
+      if (resultsSubmission == "Each member does their own submission") {
+        condition = `AND({GroupName} = "${groupName}", {GameID} = "${gameId}", {RoomNumber} = "${roomNumber}", {ParticipantEmail} = "${email}")`;
+      } else {
+        condition = `AND({GroupName} = "${groupName}", {GameID} = "${gameId}", {RoomNumber} = "${roomNumber}")`;
       }
+      let response = await fetchWithCondition("Participant", condition, filed);
+      updatedParticipants = await Promise.all(
+        response.map(async (participant) => {
+          const { id, updatedData } = createUpdatedData(
+            participant.id,
+            participant.fields,
+          );
+          const newData = { CurrentLevel: "completed" };
+
+          await updateGameInitiatedRecord("Participant", id, newData);
+          if (resultsSubmission != "Each member does their own submission") {
+            condition = `AND({GroupName} = "${groupName}", {GameID} = "${gameId}", {RoomNumber} = "${roomNumber}")`;
+            response = await fetchWithCondition(
+              "Participant",
+              condition,
+              filed,
+            );
+          }
+          condition = `AND({GameID} = "${gameId}", {RoomNumber} = "${roomNumber}")`;
+          filed = ["GameID", "Status", "RoomNumber"];
+          if (allFieldsCompleted(response, level)) {
+            response = await fetchWithCondition(
+              "GameInitiated",
+              condition,
+              filed,
+            );
+            const update = { Status: "completed" };
+            const id = response[0].id;
+
+            await updateGameInitiatedRecord("GameInitiated", id, update);
+          }
+          const updatedNewData = {
+            CurrentLevel: level,
+            email: updatedData.email,
+          };
+        }),
+      );
 
       res = {
         CurrentLevel: level,
@@ -233,11 +278,14 @@ const storeAnsweres = async (clientData, wss) => {
         groupName,
         email,
       };
-      wss.sockets.emit("newplayer", res);
+      wss.sockets.emit("completed", res);
     }
+    wss.sockets.emit("newplayer", res);
     if (!(resultsSubmission == "Each member does their own submission")) {
       wss.sockets.emit("Movelevel", { ...res, name, email, groupName });
     }
+    const result = await getChart(pdfname, parseInt(level));
+    sendEmailWithPDF(email, name, result, level);
 
     return {
       data: res,
@@ -249,18 +297,6 @@ const storeAnsweres = async (clientData, wss) => {
     throw error;
   }
 };
-function findObjectByEmail(email, array) {
-  return array.find((obj) => obj.email === email);
-}
-function allFieldsCompleted(records, lastLevel) {
-  for (const record of records) {
-    const currentLevel = parseInt(record.fields["CurrentLevel"]);
-    if (currentLevel != lastLevel) {
-      return false;
-    }
-  }
-  return true;
-}
 
 module.exports = {
   getQustions,

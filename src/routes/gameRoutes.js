@@ -137,7 +137,7 @@ router.get("/groups", async (req, res) => {
 router.get("/group-status", async (req, res) => {
   try {
     const parsedValue = req.query;
-    const data = await fetchGroupDetails(parsedValue);
+    const data = await fetchGroupStatus(parsedValue);
     res.status(200).json(data);
   } catch (error) {
     console.error("Error:", error);
