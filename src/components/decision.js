@@ -160,7 +160,7 @@ const storeAnsweres = async (clientData, wss) => {
       if (fileExists) {
         console.log("File exists. Proceeding with further operations...");
 
-        const result = getChart(pdfname, parseInt(level) + 1);
+        const result = getChart(pdfname, parseInt(level));
         sendEmailWithPDF(email, name, result, level);
       } else {
         console.log("File does not exist. Cannot proceed with operations.");

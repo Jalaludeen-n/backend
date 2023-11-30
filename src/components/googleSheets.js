@@ -116,13 +116,13 @@ function generateRanges(level) {
   // Assuming the level sheets are named "Level 1", "Level 2", ..., "Output"
   const ranges = [];
   for (let i = 1; i <= level; i++) {
-    ranges.push(`Level ${i}!A1:C`);
+    ranges.push(`Round ${i} Question!A1:C`);
   }
 
   return ranges;
 }
 const fetchQustions = async (ID, level) => {
-  const sheetName = `Level ${level}`;
+  const sheetName = `Level ${level} Question`;
 
   const data = await getSheetValues(ID, sheetName);
   const formattedData = formatData(data);
