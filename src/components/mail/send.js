@@ -14,21 +14,21 @@ function sendEmailWithPDF(recipient, Name, pdfBase64Data, level) {
   const htmlTemplate = fs.readFileSync(templatePath, "utf-8");
   const replacedTemplate = htmlTemplate
     .replace("{{Name}}", Name)
-    .replace("{{Level}}", level);
+    .replace("{{level}}", level);
   console.log("PDF File written successfully.");
   const msg = {
     to: recipient,
-    from: "hello@courageousteams.com",
-    subject: `${Name}, your score`,
+    from: "notifications@tomorrow.college",
+    subject: `Hi ${Name}, your score`,
     text: "This is a test email with an attached PDF.",
-    // attachments: [
-    //   {
-    //     content: pdfBuffer.toString("base64"),
-    //     filename: pdfFileName,
-    //     type: "application/pdf",
-    //     disposition: "attachment",
-    //   },
-    // ],
+    attachments: [
+      {
+        content: pdfBuffer.toString("base64"),
+        filename: pdfFileName,
+        type: "application/pdf",
+        disposition: "attachment",
+      },
+    ],
     html: replacedTemplate,
     // templateId: "d-6fc0287ba0134144997b3952fec0167d",
     dynamicTemplateData: {

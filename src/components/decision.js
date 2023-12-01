@@ -278,7 +278,6 @@ const storeAnsweres = async (clientData, wss) => {
         groupName,
         email,
       };
-      wss.sockets.emit("completed", res);
     }
     wss.sockets.emit("newplayer", res);
     if (!(resultsSubmission == "Each member does their own submission")) {
