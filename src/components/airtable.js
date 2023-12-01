@@ -430,18 +430,51 @@ const fetchGroupStatus = async (dataFromClient) => {
     let filed = ["CurrentLevel", "GroupName"];
     let condition = `AND({GameID} = "${GameID}", {RoomNumber} = "${RoomNumber}")`;
     let participant = await fetchWithCondition("Participant", condition, filed);
+
+    if (!participant || !participant.length) {
+      console.error("Participant data is empty or null");
+      return {
+        data: { Levels: {}, totalLevels: 0 },
+        success: false,
+        error: "Participant data is empty or null",
+        Message: "Error fetching group details",
+      };
+    }
+
     const afterFilter = extractFieldsValues(participant);
+
     condition = `{GameID} = "${GameID}"`;
     filed = ["NumberOfRounds"];
-    response = await fetchWithCondition("Games", condition, filed);
-    const onlyLevels = generateGroupProgress(
-      afterFilter,
-      response[0].fields.NumberOfRounds,
-    );
+    let response = await fetchWithCondition("Games", condition, filed);
+
+    if (!response || !response.length) {
+      console.error("Games data is empty or null");
+      return {
+        data: { Levels: {}, totalLevels: 0 },
+        success: false,
+        error: "Games data is empty or null",
+        Message: "Error fetching group details",
+      };
+    }
+
+    const numberOfRounds = response[0]?.fields?.NumberOfRounds;
+
+    if (!numberOfRounds) {
+      console.error("NumberOfRounds is null or undefined");
+      return {
+        data: { Levels: {}, totalLevels: 0 },
+        success: false,
+        error: "NumberOfRounds is null or undefined",
+        Message: "Error fetching group details",
+      };
+    }
+
+    const onlyLevels = generateGroupProgress(afterFilter, numberOfRounds);
     const outPut = processArrays(onlyLevels);
+
     return {
       success: true,
-      data: { Levels: outPut, totalLevels: response[0].fields.NumberOfRounds },
+      data: { Levels: outPut, totalLevels: numberOfRounds },
       Message: "Data fetched",
     };
   } catch (error) {
@@ -449,6 +482,7 @@ const fetchGroupStatus = async (dataFromClient) => {
     throw error;
   }
 };
+
 const fetchGroupDetails = async (dataFromClient) => {
   try {
     let filed = ["GameName", "NumberOfRounds"];
