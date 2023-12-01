@@ -21,6 +21,7 @@ const {
 const { parseJoinGameData } = require("./../../helpers/parse");
 
 const { TEXT_MESSAGES } = require("./../../constants");
+const { fetchWithCondition } = require("../../controller/airtable");
 
 const checkRequiredParams = (data) => {
   if (!data.roomNumber) {
@@ -115,6 +116,7 @@ const joinGame = async (data, wss) => {
       fields,
       data,
       role,
+      GameID,
     );
 
     const fileName = `${GameName}_GameInstruction.pdf`;
@@ -157,7 +159,7 @@ const joinGame = async (data, wss) => {
   }
 };
 
-const handleResultsSubmission = async (fields, data, role) => {
+const handleResultsSubmission = async (fields, data, role, GameID) => {
   if (fields.ResultsSubmission == "Each member does their own submission") {
     const sheetName = `${data.group}_${data.name}`;
     const sheetID = extractSpreadsheetId(fields.GoogleSheet);
@@ -175,7 +177,7 @@ const handleResultsSubmission = async (fields, data, role) => {
       fields.ResultsSubmission == "Only one person can submit group answer" &&
       role
     ) {
-      const condition = `AND({GameID} = "${GameID}",{RoomNumber} = "${data.roomNumber}",{Role} = "${role}",{Submit} = "1")`;
+      const condition = `AND({GameID} = "${GameID}",{Role} = "${role}",{Submit} = "1")`;
       const fields = ["Role", "Submit"];
       const submitRole = await fetchWithCondition("Role", condition, fields);
       if (!submitRole) submit = false;
