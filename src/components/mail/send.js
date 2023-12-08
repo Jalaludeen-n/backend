@@ -20,8 +20,11 @@ function sendEmailWithPDF(recipient, Name, pdfBase64Data, level) {
     to: recipient,
     from: "notifications@tomorrow.college",
     subject: `Hi ${Name}, your score`,
-    text: "This is a test email with an attached PDF.",
-    // name:""
+    text: "The PDF of your round score is attached to this email",
+    from: {
+      email: "notifications@tomorrow.college",
+      name: "Notifications From tomorrow college",
+    },
     attachments: [
       {
         content: pdfBuffer.toString("base64"),
