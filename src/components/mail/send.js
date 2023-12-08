@@ -14,7 +14,7 @@ function sendEmailWithPDF(recipient, Name, pdfBase64Data, level) {
   const htmlTemplate = fs.readFileSync(templatePath, "utf-8");
   const replacedTemplate = htmlTemplate
     .replace("{{Name}}", Name)
-    .replace("{{level}}", level);
+    .replace(/{{level}}/g, level);
   console.log("PDF File written successfully.");
   const msg = {
     to: recipient,
